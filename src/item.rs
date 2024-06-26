@@ -1,6 +1,6 @@
 use crate::enchantments::Enchantment;
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum ItemType {
     EnchantedBook,
 
@@ -30,7 +30,7 @@ pub enum ItemType {
     Elytra,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Item {
     item_type: ItemType,
     anvil_uses: u32,
@@ -85,3 +85,16 @@ impl Item {
         None
     }
 }
+
+macro_rules! item {
+    ($item_type: expr) => {
+        Item::new($item_type)
+    };
+    ($item_type: expr, $( ($enchantment: expr, $level: expr) ),+) => {{
+        let mut item = Item::new($item_type);
+        $( item.enchant($enchantment, $level); )+
+        item
+    }};
+}
+
+pub(crate) use item;

@@ -76,3 +76,114 @@ impl Anvil {
         Some((total_cost, new_item))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        enchantments::Enchantment,
+        item::{item, Item, ItemType},
+    };
+
+    use super::Anvil;
+
+    // tests are from https://minecraft.fandom.com/wiki/Anvil_mechanics#Costs_for_combining_enchantments
+
+    macro_rules! assert_anvil_combine {
+        ($item1: expr, $item2: expr, $java_cost: expr, $bedrock_cost: expr) => {{
+            // assert costs
+            let res = Anvil::new_java().combine($item1.clone(), $item2.clone());
+            assert!(res.is_some());
+            let (cost, item) = res.unwrap();
+
+            let res2 = Anvil::new_bedrock().combine($item1.clone(), $item2.clone());
+            assert!(res2.is_some());
+            let (cost2, item2) = res2.unwrap();
+
+            assert_eq!(cost, $java_cost);
+            assert_eq!(cost2, $bedrock_cost);
+
+            // assert result items are equal
+            assert_eq!(item, item2);
+
+            item
+        }};
+    }
+
+    macro_rules! assert_enchantments {
+        ($item: expr, $( ($enchantment: expr, $level: expr) ),+) => {
+            // assert that the item has as many enchantments as we give
+            assert_eq!($item.enchantments().len(), [$($level),+].len());
+
+            // assert each individual enchantment
+            $(
+                assert_eq!($item.level_of($enchantment), Some($level));
+            )+
+        }
+    }
+
+    #[test]
+    fn equal_enchantments() {
+        let item1 = item!(
+            ItemType::Sword,
+            (Enchantment::Sharpness, 3),
+            (Enchantment::Knockback, 2),
+            (Enchantment::Looting, 3)
+        );
+        let item2 = item!(
+            ItemType::Sword,
+            (Enchantment::Sharpness, 3),
+            (Enchantment::Looting, 3)
+        );
+
+        // item1 + item2
+        let item = assert_anvil_combine!(item1, item2, 16, 1);
+        assert_enchantments!(
+            item,
+            (Enchantment::Sharpness, 4),
+            (Enchantment::Knockback, 2),
+            (Enchantment::Looting, 3)
+        );
+
+        // item2 + item1
+        let item = assert_anvil_combine!(item2, item1, 20, 5);
+        assert_enchantments!(
+            item,
+            (Enchantment::Sharpness, 4),
+            (Enchantment::Knockback, 2),
+            (Enchantment::Looting, 3)
+        );
+    }
+
+    #[test]
+    fn unequal_enchantments() {
+        let item1 = item!(
+            ItemType::Sword,
+            (Enchantment::Sharpness, 3),
+            (Enchantment::Knockback, 2),
+            (Enchantment::Looting, 1)
+        );
+        let item2 = item!(
+            ItemType::Sword,
+            (Enchantment::Sharpness, 1),
+            (Enchantment::Looting, 3)
+        );
+
+        // item1 + item2
+        let item = assert_anvil_combine!(item1, item2, 15, 8);
+        assert_enchantments!(
+            item,
+            (Enchantment::Sharpness, 3),
+            (Enchantment::Knockback, 2),
+            (Enchantment::Looting, 3)
+        );
+
+        // item2 + item1
+        let item = assert_anvil_combine!(item2, item1, 19, 6);
+        assert_enchantments!(
+            item,
+            (Enchantment::Sharpness, 3),
+            (Enchantment::Knockback, 2),
+            (Enchantment::Looting, 3)
+        );
+    }
+}
