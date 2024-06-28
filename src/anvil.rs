@@ -59,10 +59,18 @@ impl Anvil {
                 }
                 // if the enchantment doesn't exist on the target, move it on.
                 None => {
-                    // TODO: check the enchantment isn't incompatible
-                    new_item.enchant(enchantment, sacrifice_level);
+                    if !new_item.can_have_enchantment(&enchantment) {
+                        // if the enchantments are conflicting, this costs one level in java
+                        if self.behavior == AnvilBehavior::Java {
+                            total_cost += 1;
+                        }
 
-                    sacrifice_level
+                        0
+                    } else {
+                        new_item.enchant(enchantment, sacrifice_level);
+
+                        sacrifice_level
+                    }
                 }
             };
 
@@ -185,5 +193,27 @@ mod tests {
             (Enchantment::Knockback, 2),
             (Enchantment::Looting, 3)
         );
+    }
+
+    #[test]
+    fn conflicting_enchantments() {
+        let item1 = item!(
+            ItemType::Sword,
+            (Enchantment::Sharpness, 2),
+            (Enchantment::Looting, 2)
+        );
+        let item2 = item!(
+            ItemType::Sword,
+            (Enchantment::Smite, 5),
+            (Enchantment::Looting, 2)
+        );
+
+        // item1 + item2
+        let item = assert_anvil_combine!(item1, item2, 13, 4);
+        assert_enchantments!(item, (Enchantment::Sharpness, 2), (Enchantment::Looting, 3));
+
+        // item2 + item1
+        let item = assert_anvil_combine!(item2, item1, 13, 4);
+        assert_enchantments!(item, (Enchantment::Smite, 5), (Enchantment::Looting, 3));
     }
 }

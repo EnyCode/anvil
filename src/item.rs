@@ -84,6 +84,10 @@ impl Item {
 
         None
     }
+
+    pub fn can_have_enchantment(&self, enchantment: &Enchantment) -> bool {
+        !enchantment.is_conflicting_with(&self.enchantments.iter().map(|(e, _)| e).collect())
+    }
 }
 
 macro_rules! item {

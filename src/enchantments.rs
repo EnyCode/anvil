@@ -42,6 +42,22 @@ pub enum Enchantment {
 }
 
 impl Enchantment {
+    const CONFLICTING_GROUPS: &'static [&'static [Self]] = &[
+        &[
+            Self::Protection,
+            Self::FireProtection,
+            Self::BlastProtection,
+            Self::ProjectileProtection,
+        ],
+        &[Self::DepthStrider, Self::FrostWalker],
+        &[Self::Sharpness, Self::Smite, Self::BaneOfArthropods],
+        &[Self::SilkTouch, Self::Fortune],
+        &[Self::Infinity, Self::Mending],
+        &[Self::Riptide, Self::Loyalty],
+        &[Self::Riptide, Self::Channeling],
+        &[Self::Multishot, Self::Piercing],
+    ];
+
     pub fn max_level(&self) -> u32 {
         match self {
             Self::Sharpness
@@ -81,6 +97,23 @@ impl Enchantment {
             | Self::Channeling
             | Self::Multishot => 1,
         }
+    }
+
+    pub fn is_conflicting_with(&self, existing: &Vec<&Enchantment>) -> bool {
+        for group in Self::CONFLICTING_GROUPS {
+            // if this enchantment is in the group,
+            if group.contains(&self) {
+                // check if any of the existing enchantments are also in the group.
+                for enchantment in existing {
+                    if group.contains(enchantment) {
+                        // if they are, then the enchantments are conflicting.
+                        return true;
+                    }
+                }
+            }
+        }
+
+        false
     }
 
     pub fn java_multiplier(&self, from_book: bool) -> u32 {
