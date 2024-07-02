@@ -20,6 +20,7 @@ pub enum ItemType {
     Bow,
     Crossbow,
     Trident,
+    Mace,
 
     // armour
     Helmet,

@@ -35,6 +35,9 @@ pub enum Enchantment {
     Channeling,
     Multishot,
     Piercing,
+    Density,
+    Breach,
+    WindBurst,
     QuickCharge,
     SoulSpeed,
     SwiftSneak,
@@ -50,7 +53,14 @@ impl Enchantment {
             Self::ProjectileProtection,
         ],
         &[Self::DepthStrider, Self::FrostWalker],
-        &[Self::Sharpness, Self::Smite, Self::BaneOfArthropods],
+        &[
+            Self::Sharpness,
+            Self::Smite,
+            Self::BaneOfArthropods,
+            Self::Impaling,
+            Self::Density,
+            Self::Breach,
+        ],
         &[Self::SilkTouch, Self::Fortune],
         &[Self::Infinity, Self::Mending],
         &[Self::Riptide, Self::Loyalty],
@@ -65,27 +75,30 @@ impl Enchantment {
             | Self::BaneOfArthropods
             | Self::Efficiency
             | Self::Power
+            | Self::Density
             | Self::Impaling => 5,
             Self::Protection
             | Self::FireProtection
             | Self::FeatherFalling
             | Self::BlastProtection
             | Self::ProjectileProtection
-            | Self::Piercing => 4,
-            Self::Thorns
-            | Self::Respiration
+            | Self::Piercing
+            | Self::Breach => 4,
+            Self::Respiration
+            | Self::Thorns
             | Self::DepthStrider
+            | Self::SoulSpeed
+            | Self::SwiftSneak
             | Self::Looting
+            | Self::SweepingEdge
             | Self::Unbreaking
             | Self::Fortune
             | Self::LuckOfTheSea
             | Self::Lure
-            | Self::Riptide
             | Self::Loyalty
+            | Self::Riptide
             | Self::QuickCharge
-            | Self::SoulSpeed
-            | Self::SwiftSneak
-            | Self::SweepingEdge => 3,
+            | Self::WindBurst => 3,
             Self::Knockback | Self::FireAspect | Self::Punch | Self::FrostWalker => 2,
             Self::AquaAffinity
             | Self::SilkTouch
@@ -117,60 +130,55 @@ impl Enchantment {
     }
 
     pub fn java_multiplier(&self, from_book: bool) -> u32 {
-        let book_multiplier = match self {
+        let anvil_multiplier = match self {
             Self::Protection
-            | Self::FireProtection
+            | Self::Sharpness
+            | Self::Efficiency
+            | Self::Power
+            | Self::Piercing => 1,
+            Self::FireProtection
             | Self::FeatherFalling
             | Self::ProjectileProtection
-            | Self::Sharpness
             | Self::Smite
             | Self::BaneOfArthropods
             | Self::Knockback
-            | Self::Efficiency
             | Self::Unbreaking
-            | Self::Power
             | Self::Loyalty
-            | Self::Piercing
-            | Self::QuickCharge => 1,
+            | Self::QuickCharge
+            | Self::Density => 2,
             Self::BlastProtection
             | Self::Respiration
-            | Self::DepthStrider
             | Self::AquaAffinity
+            | Self::DepthStrider
+            | Self::FrostWalker
             | Self::FireAspect
             | Self::Looting
+            | Self::SweepingEdge
             | Self::Fortune
             | Self::Punch
             | Self::Flame
             | Self::LuckOfTheSea
             | Self::Lure
-            | Self::FrostWalker
-            | Self::Mending
             | Self::Impaling
             | Self::Riptide
             | Self::Multishot
-            | Self::SweepingEdge => 2,
+            | Self::Breach
+            | Self::WindBurst
+            | Self::Mending => 4,
             Self::Thorns
+            | Self::CurseOfBinding
+            | Self::SoulSpeed
+            | Self::SwiftSneak
             | Self::SilkTouch
             | Self::Infinity
-            | Self::CurseOfBinding
-            | Self::CurseOfVanishing
             | Self::Channeling
-            | Self::SoulSpeed
-            | Self::SwiftSneak => 4,
+            | Self::CurseOfVanishing => 8,
         };
 
         if from_book {
-            book_multiplier
+            (anvil_multiplier / 2).max(1)
         } else {
-            match self {
-                Self::Protection
-                | Self::Sharpness
-                | Self::Efficiency
-                | Self::Power
-                | Self::Loyalty
-                | Self::Piercing => 1,
-                _ => book_multiplier * 2,
-            }
+            anvil_multiplier
         }
     }
 
