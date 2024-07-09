@@ -1,4 +1,5 @@
 use crate::item::{Item, ItemType};
+use itertools::Itertools;
 
 #[derive(PartialEq)]
 enum AnvilBehavior {
@@ -8,6 +9,13 @@ enum AnvilBehavior {
 
 pub struct Anvil {
     behavior: AnvilBehavior,
+}
+
+pub struct AnvilCombinationResults {
+    pub lowest_cost: u32,
+    pub lowest_solution: Vec<Item>,
+    pub highest_cost: u32,
+    pub highest_solution: Vec<Item>,
 }
 
 impl Anvil {
@@ -88,13 +96,69 @@ impl Anvil {
         new_item.increment_anvil_uses();
         Some((total_cost, new_item))
     }
+
+    pub fn combine_many(&self, source_items: Vec<Item>) -> AnvilCombinationResults {
+        let mut lowest_cost = u32::MAX;
+        let mut lowest_solution = Vec::new();
+
+        let mut highest_cost = u32::MIN;
+        let mut highest_solution = Vec::new();
+
+        let e_books = &source_items[1..];
+        let e_book_count = e_books.len();
+        let e_book_permutations = e_books.into_iter().permutations(e_book_count);
+
+        for permutation in e_book_permutations {
+            let mut items: Vec<Item> = permutation.into_iter().map(|i| i.clone()).collect();
+            items.insert(0, source_items[0].clone());
+
+            let items_original = items.clone();
+
+            // combine all the items together
+            let mut total_cost = 0;
+            while items.len() > 1 {
+                let mut new_items = Vec::new();
+
+                for i in 0..items.len() / 2 {
+                    let item1 = items.remove(0);
+                    let item2 = items.remove(0);
+
+                    let (cost, new_item) = self.combine(item1, item2).unwrap();
+
+                    new_items.push(new_item);
+                    total_cost += cost;
+                }
+
+                if items.len() > 0 {
+                    new_items.push(items.remove(0));
+                }
+
+                items = new_items;
+            }
+
+            if total_cost < lowest_cost {
+                lowest_cost = total_cost;
+                lowest_solution = items_original;
+            } else if total_cost > highest_cost {
+                highest_cost = total_cost;
+                highest_solution = items_original;
+            }
+        }
+
+        AnvilCombinationResults {
+            lowest_cost,
+            lowest_solution,
+            highest_cost,
+            highest_solution,
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::{
         enchantments::Enchantment,
-        item::{item, Item, ItemType},
+        item::{item, ItemType},
     };
 
     use super::Anvil;
