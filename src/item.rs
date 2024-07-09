@@ -1,4 +1,6 @@
-use crate::enchantments::Enchantment;
+use std::fmt::Display;
+
+use crate::{enchantments::Enchantment, util::prettify_pascal_case};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum ItemType {
@@ -206,6 +208,12 @@ impl Item {
             ],
         ]
         .concat()
+    }
+}
+
+impl Display for ItemType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", prettify_pascal_case(format!("{self:?}")))
     }
 }
 

@@ -11,6 +11,7 @@ pub struct Anvil {
     behavior: AnvilBehavior,
 }
 
+#[derive(PartialEq)]
 pub struct AnvilCombinationResults {
     pub lowest_cost: u32,
     pub lowest_solution: Vec<Item>,

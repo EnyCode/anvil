@@ -1,0 +1,6 @@
+.item {
+    display: inline-block;
+
+    border: 1px solid #000;
+    padding: 1em;
+}
