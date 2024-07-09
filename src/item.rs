@@ -211,9 +211,13 @@ impl Item {
 
 macro_rules! item {
     ($item_type: expr) => {
+        use crate::item::Item;
+
         Item::new($item_type)
     };
     ($item_type: expr, $( ($enchantment: expr, $level: expr) ),+) => {{
+        use crate::item::Item;
+
         let mut item = Item::new($item_type);
         $( item.enchant($enchantment, $level); )+
         item
@@ -221,3 +225,20 @@ macro_rules! item {
 }
 
 pub(crate) use item;
+
+macro_rules! target_item {
+    ($item_type: expr, $( $enchantment: expr ),+) => {{
+        use crate::item::{item, Item, ItemType};
+
+        let mut items = vec![Item::new($item_type)];
+        $(
+            items.push(item!(
+                ItemType::EnchantedBook,
+                ($enchantment, $enchantment.max_level())
+            ));
+        )+
+        items
+    }};
+}
+
+pub(crate) use target_item;
