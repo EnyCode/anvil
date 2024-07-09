@@ -55,6 +55,10 @@ impl Item {
         2u32.pow(self.anvil_uses) - 1
     }
 
+    pub fn increment_anvil_uses(&mut self) {
+        self.anvil_uses += 1;
+    }
+
     pub fn enchantments(&self) -> &Vec<(Enchantment, u32)> {
         &self.enchantments
     }
@@ -86,8 +90,122 @@ impl Item {
         None
     }
 
-    pub fn can_have_enchantment(&self, enchantment: &Enchantment) -> bool {
+    pub fn has_conflict(&self, enchantment: &Enchantment) -> bool {
         !enchantment.is_conflicting_with(&self.enchantments.iter().map(|(e, _)| e).collect())
+    }
+
+    pub fn is_compatible(&self, enchantment: &Enchantment) -> bool {
+        self.compatible_enchantments().contains(enchantment)
+    }
+
+    pub fn compatible_enchantments(&self) -> Vec<Enchantment> {
+        [
+            match self.item_type {
+                // special case
+                ItemType::EnchantedBook => Vec::new(),
+
+                ItemType::Pickaxe | ItemType::Shovel | ItemType::Hoe => vec![
+                    Enchantment::Efficiency,
+                    Enchantment::SilkTouch,
+                    Enchantment::Fortune,
+                ],
+                ItemType::Axe => vec![
+                    Enchantment::Sharpness,
+                    Enchantment::Smite,
+                    Enchantment::BaneOfArthropods,
+                    Enchantment::Efficiency,
+                    Enchantment::SilkTouch,
+                    Enchantment::Fortune,
+                ],
+                ItemType::Shears => vec![Enchantment::Efficiency],
+                ItemType::FlintAndSteel
+                | ItemType::CarrotOnAStick
+                | ItemType::WarpedFungusOnAStick
+                | ItemType::Shield => Vec::new(),
+                ItemType::FishingRod => vec![Enchantment::LuckOfTheSea, Enchantment::Lure],
+                ItemType::Sword => vec![
+                    Enchantment::Sharpness,
+                    Enchantment::Smite,
+                    Enchantment::BaneOfArthropods,
+                    Enchantment::Knockback,
+                    Enchantment::FireAspect,
+                    Enchantment::Looting,
+                    Enchantment::SweepingEdge,
+                ],
+                ItemType::Bow => vec![
+                    Enchantment::Power,
+                    Enchantment::Punch,
+                    Enchantment::Flame,
+                    Enchantment::Infinity,
+                ],
+                ItemType::Crossbow => vec![
+                    Enchantment::Multishot,
+                    Enchantment::Piercing,
+                    Enchantment::QuickCharge,
+                ],
+                ItemType::Trident => vec![
+                    Enchantment::Impaling,
+                    Enchantment::Riptide,
+                    Enchantment::Loyalty,
+                    Enchantment::Channeling,
+                ],
+                // TODO: remove duplicate armour enchantments?
+                ItemType::Helmet => vec![
+                    Enchantment::Protection,
+                    Enchantment::FireProtection,
+                    Enchantment::BlastProtection,
+                    Enchantment::ProjectileProtection,
+                    Enchantment::Thorns,
+                    Enchantment::Respiration,
+                    Enchantment::AquaAffinity,
+                    Enchantment::CurseOfBinding,
+                ],
+                ItemType::Chestplate => vec![
+                    Enchantment::Protection,
+                    Enchantment::FireProtection,
+                    Enchantment::BlastProtection,
+                    Enchantment::ProjectileProtection,
+                    Enchantment::Thorns,
+                    Enchantment::CurseOfBinding,
+                ],
+                ItemType::Leggings => vec![
+                    Enchantment::Protection,
+                    Enchantment::FireProtection,
+                    Enchantment::BlastProtection,
+                    Enchantment::ProjectileProtection,
+                    Enchantment::Thorns,
+                    Enchantment::CurseOfBinding,
+                    Enchantment::SwiftSneak,
+                ],
+                ItemType::Boots => vec![
+                    Enchantment::Protection,
+                    Enchantment::FireProtection,
+                    Enchantment::FeatherFalling,
+                    Enchantment::BlastProtection,
+                    Enchantment::ProjectileProtection,
+                    Enchantment::Thorns,
+                    Enchantment::DepthStrider,
+                    Enchantment::CurseOfBinding,
+                    Enchantment::SoulSpeed,
+                ],
+                ItemType::Elytra => vec![Enchantment::CurseOfBinding],
+                ItemType::Mace => vec![
+                    Enchantment::Density,
+                    Enchantment::Breach,
+                    Enchantment::WindBurst,
+                    Enchantment::Smite,
+                    Enchantment::BaneOfArthropods,
+                    Enchantment::FireAspect,
+                ],
+            },
+            // these enchantments can go on everything
+            vec![
+                Enchantment::Unbreaking,
+                Enchantment::Mending,
+                Enchantment::CurseOfVanishing,
+            ],
+        ]
+        .concat()
     }
 }
 

@@ -50,8 +50,8 @@ impl Anvil {
 
                     new_item.enchant(enchantment, new_level);
 
-                    // on java, the enchantment cost is the final level.
-                    // on bedrock, it's the difference between the final and initial levels.
+                    // in java, the enchantment cost is the final level.
+                    // in bedrock, it's the difference between the final and initial levels.
                     match self.behavior {
                         AnvilBehavior::Java => new_level,
                         AnvilBehavior::Bedrock => new_level - target_level,
@@ -59,12 +59,16 @@ impl Anvil {
                 }
                 // if the enchantment doesn't exist on the target, move it on.
                 None => {
-                    if !new_item.can_have_enchantment(&enchantment) {
+                    if !new_item.has_conflict(&enchantment) {
                         // if the enchantments are conflicting, this costs one level in java
                         if self.behavior == AnvilBehavior::Java {
                             total_cost += 1;
                         }
 
+                        0
+                    } else if !new_item.is_compatible(&enchantment)
+                        && new_item.item_type() != &ItemType::EnchantedBook
+                    {
                         0
                     } else {
                         new_item.enchant(enchantment, sacrifice_level);
@@ -81,6 +85,7 @@ impl Anvil {
                 };
         }
 
+        new_item.increment_anvil_uses();
         Some((total_cost, new_item))
     }
 }
@@ -215,5 +220,20 @@ mod tests {
         // item2 + item1
         let item = assert_anvil_combine!(item2, item1, 13, 4);
         assert_enchantments!(item, (Enchantment::Smite, 5), (Enchantment::Looting, 3));
+    }
+
+    #[test]
+    fn using_books() {
+        let item1 = item!(ItemType::Sword, (Enchantment::Looting, 2));
+        let item2 = item!(
+            ItemType::EnchantedBook,
+            (Enchantment::Protection, 3),
+            (Enchantment::Sharpness, 1),
+            (Enchantment::Looting, 2)
+        );
+
+        let item = assert_anvil_combine!(item1, item2, 7, 3);
+        assert_eq!(item.item_type(), &ItemType::Sword);
+        assert_enchantments!(item, (Enchantment::Sharpness, 1), (Enchantment::Looting, 3));
     }
 }
