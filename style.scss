@@ -1,0 +1,23 @@
+.rows {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+
+    > .row {
+        display: flex;
+        align-items: center;
+        gap: 0.5em;
+    }
+}
+
+.item {
+    display: inline-block;
+
+    border: 1px solid #000;
+    padding: 1em;
+
+    > div {
+        display: flex;
+        flex-direction: column;
+    }
+}
