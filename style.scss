@@ -1,3 +1,45 @@
+@font-face {
+    font-family: Minecraft;
+    src: url(public/mc.ttf) format(truetype);
+}
+
+:root {
+    --upscale: 1;
+    --shadow-color: #3f3f3f;
+}
+
+* {
+    font-size: calc(16px * var(--upscale));
+    text-shadow: calc(2px * var(--upscale)) calc(2px * var(--upscale))
+        var(--shadow-color);
+}
+
+body {
+    font-family: Minecraft, sans-serif;
+
+    color: #fff;
+
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
+    -webkit-font-smoothing: none;
+
+    background: linear-gradient(#0008, #0008), url(public/stone.png);
+    background-size: 5em;
+}
+
+h1,
+h2 {
+    font-weight: normal;
+}
+
+h1 {
+    --upscale: 2;
+}
+
+h2 {
+    --upscale: 1.5;
+}
+
 .rows {
     display: flex;
     flex-direction: column;
@@ -7,17 +49,125 @@
         display: flex;
         align-items: center;
         gap: 0.5em;
+
+        > .green {
+            margin-left: 1em;
+        }
     }
 }
 
 .item {
-    display: inline-block;
+    display: flex;
+    align-items: center;
+    gap: 0.25em;
 
-    border: 1px solid #000;
-    padding: 1em;
+    > span {
+        width: 3em;
+        height: 3em;
+
+        background-image: url(public/items.png);
+        background-size: 800% 800%;
+
+        mask-image: url(public/items.png);
+        mask-size: 800% 800%;
+        -webkit-mask-image: url(public/items.png);
+        -webkit-mask-size: 800% 800%;
+    }
+
+    &.enchanted > span {
+        background-image: linear-gradient(#a5f3, #a5f3), url(public/items.png);
+        background-blend-mode: color;
+    }
+
+    &.enchanted > div > span {
+        color: #5ff;
+        text-shadow: 2px 2px #153f3f;
+    }
+
+    &.enchanted-book > div > span {
+        color: #ff5;
+        text-shadow: 2px 2px #3f3f15;
+    }
 
     > div {
-        display: flex;
-        flex-direction: column;
+        $size: 2px;
+
+        position: relative;
+        background-color: rgb(16 0 16 / 94%);
+        padding: calc($size * 3);
+        margin: 0 calc($size * 2);
+
+        font-size: 16px;
+        line-height: 1.25;
+        white-space: nowrap;
+
+        > div {
+            display: flex;
+            flex-direction: column;
+        }
+
+        &:before,
+        &:after {
+            content: '';
+            position: absolute;
+            box-sizing: border-box;
+        }
+
+        &:before {
+            border: $size solid rgb(16 0 16 / 94%);
+            // i get weird results on mobile otherwise
+            border-left-width: calc($size + 1px);
+            border-right-width: calc($size + 1px);
+
+            // `inset: $size -$size;` becomes `inset: 0;`
+            left: -$size;
+            right: -$size;
+            top: $size;
+            bottom: $size;
+        }
+
+        &:after {
+            border: $size solid #2d0a63;
+            border-image: linear-gradient(
+                    rgb(80 0 255 / 31%),
+                    rgb(40 0 127 / 31%)
+                )
+                1;
+            inset: $size 0;
+        }
     }
+
+    // icons
+    @mixin icon($name, $x, $y) {
+        &.#{$name} > span {
+            background-position: calc(-100% * $x) calc(-100% * $y);
+            mask-position: calc(-100% * $x) calc(-100% * $y);
+            -webkit-mask-position: calc(-100% * $x) calc(-100% * $y);
+        }
+    }
+
+    @include icon(pickaxe, 1, 0);
+    @include icon(axe, 2, 0);
+    @include icon(shovel, 3, 0);
+    @include icon(hoe, 4, 0);
+    @include icon(shears, 5, 0);
+    @include icon(flint-and-steel, 6, 0);
+    @include icon(fishing-rod, 7, 0);
+    @include icon(carrot-on-a-stick, 0, 1);
+    @include icon(warped-fungus-on-a-stick, 1, 1);
+    @include icon(sword, 2, 1);
+    @include icon(bow, 3, 1);
+    @include icon(crossbow, 4, 1);
+    @include icon(trident, 5, 1);
+    @include icon(helmet, 6, 1);
+    @include icon(chestplate, 7, 1);
+    @include icon(leggings, 0, 2);
+    @include icon(boots, 1, 2);
+    @include icon(shield, 2, 2);
+    @include icon(elytra, 3, 2);
+}
+
+.green {
+    color: #5f5;
+    --shadow-color: #153f15;
 }
