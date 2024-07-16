@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use crate::{enchantments::Enchantment, util::prettify_pascal_case};
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, EnumIter, PartialEq)]
 pub enum ItemType {
     EnchantedBook,
 
@@ -22,7 +22,6 @@ pub enum ItemType {
     Bow,
     Crossbow,
     Trident,
-    Mace,
 
     // armour
     Helmet,
@@ -191,14 +190,6 @@ impl Item {
                     Enchantment::SoulSpeed,
                 ],
                 ItemType::Elytra => vec![Enchantment::CurseOfBinding],
-                ItemType::Mace => vec![
-                    Enchantment::Density,
-                    Enchantment::Breach,
-                    Enchantment::WindBurst,
-                    Enchantment::Smite,
-                    Enchantment::BaneOfArthropods,
-                    Enchantment::FireAspect,
-                ],
             },
             // these enchantments can go on everything
             vec![
@@ -249,4 +240,5 @@ macro_rules! target_item {
     }};
 }
 
+use strum::EnumIter;
 pub(crate) use target_item;

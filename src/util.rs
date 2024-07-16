@@ -25,6 +25,9 @@ pub fn prettify_pascal_case(string: String) -> String {
     }
 
     formatted
+        .replace(" And ", " and ")
+        .replace(" On ", " on ")
+        .replace(" A ", " a ")
 }
 
 pub fn target_for_source_items(source_items: &Vec<Item>) -> Item {

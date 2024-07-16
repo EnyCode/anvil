@@ -1,8 +1,9 @@
+use strum::IntoEnumIterator;
 use yew::{classes, function_component, html, Component, Context, Html, Properties};
 
 use crate::{
     anvil::Anvil,
-    item::Item,
+    item::{Item, ItemType},
     presets::presets,
     util::{target_for_source_items, to_roman_numerals},
 };
@@ -14,6 +15,7 @@ pub struct App {
 
 pub enum AppMessage {
     ApplyPreset(Vec<Item>),
+    SetItemType(ItemType),
 }
 
 impl Component for App {
@@ -31,6 +33,10 @@ impl Component for App {
         match msg {
             AppMessage::ApplyPreset(source_items) => {
                 self.source_items = Some(source_items);
+                true
+            }
+            AppMessage::SetItemType(item_type) => {
+                self.source_items = Some(vec![Item::new(item_type)]);
                 true
             }
         }
@@ -115,7 +121,31 @@ impl Component for App {
                         }
                     })}
                 </div>
+
                 {body_html}
+
+                <h1>{"Customisation"}</h1>
+                <h2>{"Item"}</h2>
+                <div id="items">
+                    {for ItemType::iter().map(|item_type| {
+                        let selected = match &self.source_items {
+                            Some(source_items) => source_items[0].item_type() == &item_type,
+                            None => false,
+                        };
+
+                        html! {
+                            <div
+                                onclick={ctx.link().callback(move |_| AppMessage::SetItemType(item_type))}
+                            >
+                                <ItemComponent
+                                    item={Item::new(item_type)}
+                                    hover={true}
+                                    {selected}
+                                />
+                            </div>
+                        }
+                    })}
+                </div>
             </>
         }
     }
@@ -126,6 +156,8 @@ pub struct ItemProps {
     pub item: Item,
     #[prop_or(false)]
     pub hover: bool,
+    #[prop_or(false)]
+    pub selected: bool,
 }
 
 #[function_component]
@@ -146,6 +178,9 @@ fn ItemComponent(props: &ItemProps) -> Html {
 
     if props.hover {
         classes.push("hover".to_string());
+    }
+    if props.selected {
+        classes.push("selected".to_string());
     }
 
     html! {

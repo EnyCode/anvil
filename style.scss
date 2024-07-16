@@ -45,11 +45,12 @@ h2 {
     --upscale: 1.5;
 }
 
-#presets {
+#presets,
+#items {
     display: flex;
     gap: 1em;
     flex-wrap: wrap;
-    max-width: 70%;
+    max-width: 45em;
 
     .item {
         cursor: pointer;
@@ -81,11 +82,15 @@ h2 {
 }
 
 .item {
+    $size: 2px;
+
     display: flex;
     align-items: center;
     gap: 0.25em;
 
     > span {
+        position: relative;
+
         width: 3em;
         height: 3em;
 
@@ -105,12 +110,12 @@ h2 {
 
     &.enchanted > div > span {
         color: #5ff;
-        text-shadow: 2px 2px #153f3f;
+        --shadow-color: #153f3f;
     }
 
     &.enchanted-book > div > span {
         color: #ff5;
-        text-shadow: 2px 2px #3f3f15;
+        --shadow-color: #3f3f15;
     }
 
     &.hover {
@@ -130,9 +135,24 @@ h2 {
         }
     }
 
-    > div {
-        $size: 2px;
+    &.selected > span::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-color: #fff;
+        animation: 0.25s infinite alternate linear pulse;
 
+        @keyframes pulse {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+    }
+
+    > div {
         position: relative;
         background-color: rgb(16 0 16 / 94%);
         padding: calc($size * 3);
@@ -145,6 +165,9 @@ h2 {
         > div {
             display: flex;
             flex-direction: column;
+
+            color: #aaa;
+            --shadow-color: #2a2a2a;
         }
 
         &:before,
