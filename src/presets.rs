@@ -86,6 +86,13 @@ pub fn presets() -> Vec<Vec<Item>> {
             Enchantment::Impaling
         ),
         target_item!(
+            ItemType::Mace,
+            Enchantment::Unbreaking,
+            Enchantment::Density,
+            Enchantment::WindBurst,
+            Enchantment::Mending
+        ),
+        target_item!(
             ItemType::Helmet,
             Enchantment::Unbreaking,
             Enchantment::Mending,

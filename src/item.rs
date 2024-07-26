@@ -22,6 +22,7 @@ pub enum ItemType {
     Bow,
     Crossbow,
     Trident,
+    Mace,
 
     // armour
     Helmet,
@@ -34,8 +35,11 @@ pub enum ItemType {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Item {
+    /// the type of item this is (e.g. book, pickaxe, etc)
     item_type: ItemType,
+    /// the amount of times this item has been used in an anvil already
     anvil_uses: u32,
+    /// the enchantments and their corresponding levels
     enchantments: Vec<(Enchantment, u32)>,
 }
 
@@ -52,6 +56,7 @@ impl Item {
         &self.item_type
     }
 
+    /// calculates the work penalty of this item using the number of anvil uses
     pub fn work_penalty(&self) -> u32 {
         2u32.pow(self.anvil_uses) - 1
     }
@@ -68,6 +73,23 @@ impl Item {
         self.enchantments
     }
 
+    /// adds an enchantment to this item.
+    /// if the given level is greater than the maximum level of the enchantment, it will be reduced.
+    /// if the item already has this enchantment, its level will be changed, even if the incoming level is lower.
+    /// ```
+    /// let mut item = item!(ItemType::Pickaxe);
+    ///
+    /// item.enchant(Enchantment::Fortune, 3);
+    /// assert_eq!(item.level_of(Enchantment::Fortune), Some(3));
+    ///
+    /// // the level of the enchantment automatically becomes 5.
+    /// item.enchant(Enchantment::Efficiency, 10);
+    /// assert_eq!(item.level_of(Enchantment::Efficiency), Some(5));
+    ///
+    /// // the existing efficiency enchantment is overwritten.
+    /// item.enchant(Enchantment::Efficiency, 1);
+    /// assert_eq!(item.level_of(Enchantment::Efficiency), Some(1));
+    /// ```
     pub fn enchant(&mut self, enchantment: Enchantment, level: u32) {
         let level = u32::min(level, enchantment.max_level());
 
@@ -81,6 +103,7 @@ impl Item {
         self.enchantments.push((enchantment, level));
     }
 
+    /// gets the level of the given enchantment, or `None` if the item doesn't have it.
     pub fn level_of(&self, wanted_enchantment: Enchantment) -> Option<u32> {
         for enchantment in &self.enchantments {
             if enchantment.0 == wanted_enchantment {
@@ -91,12 +114,21 @@ impl Item {
         None
     }
 
+    /// checks if the given enchantment is conflicting with the item.
+    /// conflicting means that the enchantment is conflicting with another enchantment.
+    /// for example, the Fortune and Silk Touch enchantments conflict with each other.
     pub fn has_conflict(&self, enchantment: &Enchantment) -> bool {
         !enchantment.is_conflicting_with(&self.enchantments.iter().map(|(e, _)| e).collect())
     }
 
+    /// checks if the given enchantment is compatible with the item.
+    /// for example, Silk Touch is compatible with pickaxes, but not with swords.
     pub fn is_compatible(&self, enchantment: &Enchantment) -> bool {
-        self.compatible_enchantments().contains(enchantment)
+        if self.item_type == ItemType::EnchantedBook {
+            true
+        } else {
+            self.compatible_enchantments().contains(enchantment)
+        }
     }
 
     pub fn compatible_enchantments(&self) -> Vec<Enchantment> {
@@ -149,6 +181,14 @@ impl Item {
                     Enchantment::Riptide,
                     Enchantment::Loyalty,
                     Enchantment::Channeling,
+                ],
+                ItemType::Mace => vec![
+                    Enchantment::Density,
+                    Enchantment::Breach,
+                    Enchantment::WindBurst,
+                    Enchantment::Smite,
+                    Enchantment::BaneOfArthropods,
+                    Enchantment::FireAspect,
                 ],
                 // TODO: remove duplicate armour enchantments?
                 ItemType::Helmet => vec![
@@ -209,11 +249,11 @@ impl Display for ItemType {
 }
 
 macro_rules! item {
-    ($item_type: expr) => {
+    ($item_type: expr) => {{
         use crate::item::Item;
 
         Item::new($item_type)
-    };
+    }};
     ($item_type: expr, $( ($enchantment: expr, $level: expr) ),+) => {{
         use crate::item::Item;
 
@@ -242,3 +282,24 @@ macro_rules! target_item {
 
 use strum::EnumIter;
 pub(crate) use target_item;
+
+#[cfg(test)]
+mod tests {
+    use crate::{enchantments::Enchantment, item::ItemType};
+
+    #[test]
+    fn enchant_item() {
+        let mut item = item!(ItemType::Pickaxe);
+
+        item.enchant(Enchantment::Fortune, 3);
+        assert_eq!(item.level_of(Enchantment::Fortune), Some(3));
+
+        // the level of the enchantment automatically becomes 5.
+        item.enchant(Enchantment::Efficiency, 10);
+        assert_eq!(item.level_of(Enchantment::Efficiency), Some(5));
+
+        // the existing efficiency enchantment is overwritten.
+        item.enchant(Enchantment::Efficiency, 1);
+        assert_eq!(item.level_of(Enchantment::Efficiency), Some(1));
+    }
+}

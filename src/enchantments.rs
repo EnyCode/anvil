@@ -1,24 +1,31 @@
 use std::fmt::Display;
 
+use strum::EnumIter;
+
 use crate::util::prettify_pascal_case;
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, EnumIter, PartialEq)]
 pub enum Enchantment {
     Protection,
     FireProtection,
     FeatherFalling,
     BlastProtection,
     ProjectileProtection,
-    Thorns,
     Respiration,
-    DepthStrider,
     AquaAffinity,
+    Thorns,
+    DepthStrider,
+    FrostWalker,
+    CurseOfBinding,
+    SoulSpeed,
+    SwiftSneak,
     Sharpness,
     Smite,
     BaneOfArthropods,
     Knockback,
     FireAspect,
     Looting,
+    SweepingEdge,
     Efficiency,
     SilkTouch,
     Unbreaking,
@@ -29,23 +36,18 @@ pub enum Enchantment {
     Infinity,
     LuckOfTheSea,
     Lure,
-    FrostWalker,
-    Mending,
-    CurseOfBinding,
-    CurseOfVanishing,
+    Loyalty,
     Impaling,
     Riptide,
-    Loyalty,
     Channeling,
     Multishot,
+    QuickCharge,
     Piercing,
     Density,
     Breach,
     WindBurst,
-    QuickCharge,
-    SoulSpeed,
-    SwiftSneak,
-    SweepingEdge,
+    Mending,
+    CurseOfVanishing,
 }
 
 impl Enchantment {
@@ -67,11 +69,12 @@ impl Enchantment {
         ],
         &[Self::SilkTouch, Self::Fortune],
         &[Self::Infinity, Self::Mending],
-        &[Self::Riptide, Self::Loyalty],
+        &[Self::Loyalty, Self::Riptide],
         &[Self::Riptide, Self::Channeling],
         &[Self::Multishot, Self::Piercing],
     ];
 
+    /// returns the maximum level for the current enchantment
     pub fn max_level(&self) -> u32 {
         match self {
             Self::Sharpness
@@ -79,8 +82,8 @@ impl Enchantment {
             | Self::BaneOfArthropods
             | Self::Efficiency
             | Self::Power
-            | Self::Density
-            | Self::Impaling => 5,
+            | Self::Impaling
+            | Self::Density => 5,
             Self::Protection
             | Self::FireProtection
             | Self::FeatherFalling
@@ -103,19 +106,21 @@ impl Enchantment {
             | Self::Riptide
             | Self::QuickCharge
             | Self::WindBurst => 3,
-            Self::Knockback | Self::FireAspect | Self::Punch | Self::FrostWalker => 2,
+            Self::FrostWalker | Self::Knockback | Self::FireAspect | Self::Punch => 2,
             Self::AquaAffinity
+            | Self::CurseOfBinding
             | Self::SilkTouch
             | Self::Flame
             | Self::Infinity
-            | Self::Mending
-            | Self::CurseOfBinding
-            | Self::CurseOfVanishing
             | Self::Channeling
-            | Self::Multishot => 1,
+            | Self::Multishot
+            | Self::Mending
+            | Self::CurseOfVanishing => 1,
         }
     }
 
+    /// returns `true` if this enchantment conflicts with any of the given ones.
+    /// conflicting enchantments means they cannot be applied together (e.g. Silk Touch and Fortune)
     pub fn is_conflicting_with(&self, existing: &Vec<&Enchantment>) -> bool {
         for group in Self::CONFLICTING_GROUPS {
             // if this enchantment is in the group,
@@ -133,6 +138,13 @@ impl Enchantment {
         false
     }
 
+    /// returns `true` if this enchantment is a curse
+    pub fn is_curse(&self) -> bool {
+        self == &Self::CurseOfBinding || self == &Self::CurseOfVanishing
+    }
+
+    /// the level multiplier for this enchantment on java edition.
+    /// this value varies depending on if the source item is a book or not.
     pub fn java_multiplier(&self, from_book: bool) -> u32 {
         let anvil_multiplier = match self {
             Self::Protection
@@ -186,10 +198,12 @@ impl Enchantment {
         }
     }
 
+    /// the level multiplier for this enchantment on bedrock platforms.
+    /// this value varies depending on if the source item is a book or not.
     pub fn bedrock_multiplier(&self, from_book: bool) -> u32 {
         let java_multipler = self.java_multiplier(from_book);
 
-        if self == &Self::Impaling {
+        if self == &Self::Loyalty || self == &Self::Impaling {
             java_multipler / 2
         } else {
             java_multipler

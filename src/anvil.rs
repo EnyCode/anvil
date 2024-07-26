@@ -1,14 +1,11 @@
-use crate::item::{Item, ItemType};
 use itertools::Itertools;
+
+use crate::item::{Item, ItemType};
 
 #[derive(PartialEq)]
 enum AnvilBehavior {
     Java,
     Bedrock,
-}
-
-pub struct Anvil {
-    behavior: AnvilBehavior,
 }
 
 #[derive(PartialEq)]
@@ -17,6 +14,10 @@ pub struct AnvilCombinationResults {
     pub lowest_solution: Vec<Item>,
     pub highest_cost: u32,
     pub highest_solution: Vec<Item>,
+}
+
+pub struct Anvil {
+    behavior: AnvilBehavior,
 }
 
 impl Anvil {
@@ -32,6 +33,9 @@ impl Anvil {
         }
     }
 
+    /// combines the target and sacrifice items in this anvil.
+    /// returns `None` if the items are incompatible.
+    /// returns a tuple containing the price and resulting item otherwise.
     pub fn combine(&self, target: Item, sacrifice: Item) -> Option<(u32, Item)> {
         let sacrifice_is_book = sacrifice.item_type() == &ItemType::EnchantedBook;
 
@@ -66,7 +70,7 @@ impl Anvil {
                         AnvilBehavior::Bedrock => new_level - target_level,
                     }
                 }
-                // if the enchantment doesn't exist on the target, move it on.
+                // if the enchantment doesn't exist on the target, add it on.
                 None => {
                     if !new_item.has_conflict(&enchantment) {
                         // if the enchantments are conflicting, this costs one level in java
@@ -75,9 +79,7 @@ impl Anvil {
                         }
 
                         0
-                    } else if !new_item.is_compatible(&enchantment)
-                        && new_item.item_type() != &ItemType::EnchantedBook
-                    {
+                    } else if !new_item.is_compatible(&enchantment) {
                         0
                     } else {
                         new_item.enchant(enchantment, sacrifice_level);
@@ -98,12 +100,19 @@ impl Anvil {
         Some((total_cost, new_item))
     }
 
+    /// given a vector of source items, this function checks all the possible ways to combine the items together.
+    /// the function returns a struct containing information about the found results.
     pub fn combine_many(&self, source_items: Vec<Item>) -> AnvilCombinationResults {
         let mut lowest_cost = u32::MAX;
         let mut lowest_solution = Vec::new();
 
         let mut highest_cost = u32::MIN;
         let mut highest_solution = Vec::new();
+
+        // TODO: for playground mode
+        // the slice of enchanted books may not be [1..]
+        // the items which aren't enchanted books should be permuted as well
+        // when inserting below, insert all the non-book items
 
         let e_books = &source_items[1..];
         let e_book_count = e_books.len();
@@ -120,7 +129,7 @@ impl Anvil {
             while items.len() > 1 {
                 let mut new_items = Vec::new();
 
-                for i in 0..items.len() / 2 {
+                for _ in 0..items.len() / 2 {
                     let item1 = items.remove(0);
                     let item2 = items.remove(0);
 
@@ -146,6 +155,13 @@ impl Anvil {
             }
         }
 
+        // when there is a single solution, only the lowest solution is assigned (to appease the borrow checker).
+        // when this happens, we can just copy those values to the highest solution.
+        if highest_cost == 0 && lowest_cost > 0 {
+            highest_cost = lowest_cost;
+            highest_solution = lowest_solution.clone();
+        }
+
         AnvilCombinationResults {
             lowest_cost,
             lowest_solution,
@@ -164,7 +180,7 @@ mod tests {
 
     use super::Anvil;
 
-    // tests are from https://minecraft.fandom.com/wiki/Anvil_mechanics#Costs_for_combining_enchantments
+    // tests are from https://minecraft.wiki/w/Anvil_mechanics#Costs_for_combining_enchantments
 
     macro_rules! assert_anvil_combine {
         ($item1: expr, $item2: expr, $java_cost: expr, $bedrock_cost: expr) => {{

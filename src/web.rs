@@ -3,7 +3,8 @@ use yew::{classes, function_component, html, Component, Context, Html, Propertie
 
 use crate::{
     anvil::Anvil,
-    item::{Item, ItemType},
+    enchantments::Enchantment,
+    item::{item, Item, ItemType},
     presets::presets,
     util::{target_for_source_items, to_roman_numerals},
 };
@@ -16,20 +17,21 @@ pub struct App {
 pub enum AppMessage {
     ApplyPreset(Vec<Item>),
     SetItemType(ItemType),
+    ToggleEnchantment(Enchantment),
 }
 
 impl Component for App {
     type Message = AppMessage;
     type Properties = ();
 
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
         Self {
             anvil: Anvil::new_java(),
             source_items: None,
         }
     }
 
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             AppMessage::ApplyPreset(source_items) => {
                 self.source_items = Some(source_items);
@@ -37,6 +39,29 @@ impl Component for App {
             }
             AppMessage::SetItemType(item_type) => {
                 self.source_items = Some(vec![Item::new(item_type)]);
+                true
+            }
+            AppMessage::ToggleEnchantment(enchantment) => {
+                // search for the enchantment
+                match self
+                    .source_items
+                    .as_ref()
+                    .unwrap()
+                    .iter()
+                    .position(|i| i.level_of(enchantment).is_some())
+                {
+                    // if the enchantment has been found, remove it
+                    Some(i) => {
+                        self.source_items.as_mut().unwrap().remove(i);
+                    }
+                    // if the enchantment isn't present, add it
+                    None => {
+                        self.source_items.as_mut().unwrap().push(item!(
+                            ItemType::EnchantedBook,
+                            (enchantment, enchantment.max_level())
+                        ));
+                    }
+                }
                 true
             }
         }
@@ -53,7 +78,7 @@ impl Component for App {
                 while items.len() > 1 {
                     let mut new_items = Vec::new();
 
-                    for i in 0..items.len() / 2 {
+                    for _ in 0..items.len() / 2 {
                         let item1 = items.remove(0);
                         let item2 = items.remove(0);
 
@@ -87,11 +112,12 @@ impl Component for App {
                             </span>
                         </h1>
                         <h2>
-                            {format!(
-                                "Maximum price {} - saves {}",
-                                results.highest_cost,
-                                results.highest_cost - results.lowest_cost
-                            )}
+                            {"Maximum "}
+                            <span class={classes!("green")}>{results.highest_cost}</span>
+                            {" - Saves "}
+                            <span class={classes!("green")}>
+                                {results.highest_cost - results.lowest_cost}
+                            </span>
                         </h2>
                         <div class={classes!("rows")}>
                             {for rows}
@@ -122,8 +148,6 @@ impl Component for App {
                     })}
                 </div>
 
-                {body_html}
-
                 <h1>{"Customisation"}</h1>
                 <h2>{"Item"}</h2>
                 <div id="items">
@@ -146,6 +170,47 @@ impl Component for App {
                         }
                     })}
                 </div>
+                if let Some(source_items) = &self.source_items {
+                    <h2>{"Enchantments"}</h2>
+                    <div id="enchantments">
+                        {for
+                            // get all compatible enchantments
+                            // or all enchantments, if the item is an enchanted book
+                            if source_items[0].item_type() != &ItemType::EnchantedBook {
+                                source_items[0].compatible_enchantments().into_iter()
+                            } else {
+                                Enchantment::iter().collect::<Vec<_>>().into_iter()
+                            }
+                            .map(|enchantment| {
+                                let selected =  if source_items
+                                    .iter()
+                                    .any(|i| i.level_of(enchantment).is_some())
+                                {
+                                    Some("selected")
+                                } else {
+                                    None
+                                };
+
+                                html! {
+                                    <div
+                                        class={classes!(selected)}
+                                        onclick={ctx.link().callback(move |_| AppMessage::ToggleEnchantment(enchantment))}
+                                    >
+                                        {enchantment}
+                                    </div>
+                                }
+                            })
+                        }
+                    </div>
+                }
+
+                {body_html}
+
+                <footer>
+                    <a href="https://github.com/EnyCode/anvil/" target="_blank">
+                        {"this project is OPEN SOURCE!"}
+                    </a>
+                </footer>
             </>
         }
     }
@@ -191,8 +256,18 @@ fn ItemComponent(props: &ItemProps) -> Html {
                     {props.item.item_type()}
                 </span>
                 <div>
-                    {for props.item.enchantments().iter().map(|(e, l)| html! {
-                        <span>{e}{to_roman_numerals(*l)}</span>
+                    {for props.item.enchantments().iter().map(|(e, l)| {
+                        let red = if e.is_curse() {
+                            Some("red")
+                        } else {
+                            None
+                        };
+
+                        html! {
+                            <span class={classes!(red)}>
+                                {e}{to_roman_numerals(*l)}
+                            </span>
+                        }
                     })}
                 </div>
             </div>
