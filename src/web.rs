@@ -130,46 +130,48 @@ impl Component for App {
 
         html! {
             <>
-                <h1>{"Presets"}</h1>
-                <div id="presets">
-                    {for presets().iter().map(|src_items| {
-                        let preset = src_items.clone();
+                <div class="container">
+                    <h1>{"Presets"}</h1>
+                    <div id="presets">
+                        {for presets().iter().map(|src_items| {
+                            let preset = src_items.clone();
 
-                        html! {
-                            <div
-                                onclick={ctx.link().callback(move |_| AppMessage::ApplyPreset(preset.clone()))}
-                            >
-                                <ItemComponent
-                                    item={target_for_source_items(src_items)}
-                                    hover={true}
-                                />
-                            </div>
-                        }
-                    })}
+                            html! {
+                                <div
+                                    onclick={ctx.link().callback(move |_| AppMessage::ApplyPreset(preset.clone()))}
+                                >
+                                    <ItemComponent
+                                        item={target_for_source_items(src_items)}
+                                        hover={true}
+                                    />
+                                </div>
+                            }
+                        })}
+                    </div>
+
+                    <h1>{"Add Items"}</h1>
+                    <div id="items">
+                        {for ItemType::iter().map(|item_type| {
+                            let selected = match &self.source_items {
+                                Some(source_items) => source_items[0].item_type() == &item_type,
+                                None => false,
+                            };
+
+                            html! {
+                                <div
+                                    onclick={ctx.link().callback(move |_| AppMessage::SetItemType(item_type))}
+                                >
+                                    <ItemComponent
+                                        item={Item::new(item_type)}
+                                        hover={true}
+                                        {selected}
+                                    />
+                                </div>
+                            }
+                        })}
+                    </div>
                 </div>
 
-                <h1>{"Customisation"}</h1>
-                <h2>{"Item"}</h2>
-                <div id="items">
-                    {for ItemType::iter().map(|item_type| {
-                        let selected = match &self.source_items {
-                            Some(source_items) => source_items[0].item_type() == &item_type,
-                            None => false,
-                        };
-
-                        html! {
-                            <div
-                                onclick={ctx.link().callback(move |_| AppMessage::SetItemType(item_type))}
-                            >
-                                <ItemComponent
-                                    item={Item::new(item_type)}
-                                    hover={true}
-                                    {selected}
-                                />
-                            </div>
-                        }
-                    })}
-                </div>
                 if let Some(source_items) = &self.source_items {
                     <h2>{"Enchantments"}</h2>
                     <div id="enchantments">

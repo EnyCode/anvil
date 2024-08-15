@@ -4,21 +4,15 @@
 }
 
 :root {
-    --upscale: 1;
     --shadow-color: #3f3f3f;
-}
-
-* {
-    font-size: calc(16px * var(--upscale));
-    text-shadow: calc(2px * var(--upscale)) calc(2px * var(--upscale))
-        var(--shadow-color);
 }
 
 body {
     display: flex;
     flex-direction: column;
-    gap: 2em;
-    margin: 2em;
+    align-items: center;
+    gap: 12em;
+    margin: 12em auto;
 
     font-family: Minecraft, sans-serif;
     color: #fff;
@@ -27,40 +21,69 @@ body {
     image-rendering: pixelated;
     -webkit-font-smoothing: none;
 
-    background: linear-gradient(#0008, #0008), url(public/stone.png);
-    background-size: 5em;
+    background: linear-gradient(#000a, #000a), url(public/stone.png);
+    background-size: 16em;
+
+    font-size: 4px;
 }
 
 h1,
 h2 {
+    font-size: 8em;
+    text-shadow: 0.125em 0.125em var(--shadow-color);
+
     font-weight: normal;
     margin: 0;
 }
 
-h1 {
-    --upscale: 2;
-}
+.container {
+    display: flex;
+    flex-direction: column;
 
-h2 {
-    --upscale: 1.5;
+    box-sizing: content-box;
+    border-image: url(public/gui.png) 4 fill / 4em;
+    image-rendering: pixelated;
+
+    padding: 7em;
+
+    color: #404040;
+    --shadow-color: transparent;
+
+    > h1:first-child {
+        margin-top: -0.25em;
+        margin-bottom: 0.25em;
+    }
+
+    > h1:not(:first-child) {
+        margin-top: 0.25em;
+        margin-bottom: 0.25em;
+    }
 }
 
 #presets,
 #items {
     display: flex;
-    gap: 1em;
     flex-wrap: wrap;
-    max-width: 45em;
+    max-width: 9 * 18em;
 
     .item {
-        cursor: pointer;
+        position: relative;
+
+        box-sizing: content-box;
+        border-image: url(public/slot.png) 1 fill / 1em;
+        padding: 1em;
 
         > span {
             transition: transform 0.4s;
         }
 
-        &:hover > span {
-            transform: scale(125%);
+        &:hover::before {
+            content: '';
+            display: block;
+            position: absolute;
+            inset: 1em;
+
+            background-color: #ffffff80;
         }
     }
 }
@@ -68,7 +91,6 @@ h2 {
 #enchantments {
     display: flex;
     flex-direction: column;
-    width: 45em;
     gap: 0.5em;
 
     > div {
@@ -83,11 +105,11 @@ h2 {
 }
 
 footer {
-    --upscale: 0.75;
-
     position: fixed;
     top: 1em;
     right: 1em;
+
+    font-size: 16px;
 }
 
 a {
@@ -115,8 +137,6 @@ a {
 }
 
 .item {
-    $size: 2px;
-
     display: flex;
     align-items: center;
     gap: 0.25em;
@@ -124,8 +144,8 @@ a {
     > span {
         position: relative;
 
-        width: 3em;
-        height: 3em;
+        width: 16em;
+        height: 16em;
 
         background-image: url(public/items.png);
         background-size: 800% 800%;
@@ -188,11 +208,19 @@ a {
     > div {
         position: relative;
         background-color: rgb(16 0 16 / 94%);
-        padding: calc($size * 3);
-        margin: 0 calc($size * 2);
+        padding: 4em;
+        margin: 0 20em;
+
+        color: #ffffff;
+        --shadow-color: #3f3f3f;
 
         line-height: 1.25;
         white-space: nowrap;
+
+        > * {
+            font-size: 8em;
+            text-shadow: 0.125em 0.125em var(--shadow-color);
+        }
 
         > div {
             display: flex;
@@ -210,26 +238,26 @@ a {
         }
 
         &:before {
-            border: $size solid rgb(16 0 16 / 94%);
+            border: 1em solid rgb(16 0 16 / 94%);
             // i get weird results on mobile otherwise
-            border-left-width: calc($size + 1px);
-            border-right-width: calc($size + 1px);
+            border-left-width: calc(1em + 1px);
+            border-right-width: calc(1em + 1px);
 
-            // `inset: $size -$size;` becomes `inset: 0;`
-            left: -$size;
-            right: -$size;
-            top: $size;
-            bottom: $size;
+            // `inset: 1em -1em;` becomes `inset: 0;`
+            left: -1em;
+            right: -1em;
+            top: 1em;
+            bottom: 1em;
         }
 
         &:after {
-            border: $size solid #2d0a63;
+            border: 1em solid #2d0a63;
             border-image: linear-gradient(
                     rgb(80 0 255 / 31%),
                     rgb(40 0 127 / 31%)
                 )
                 1;
-            inset: $size 0;
+            inset: 1em 0;
         }
     }
 
