@@ -35,8 +35,8 @@ impl Anvil {
 
     /// combines the target and sacrifice items in this anvil.
     /// returns `None` if the items are incompatible.
-    /// returns a tuple containing the price and resulting item otherwise.
-    pub fn combine(&self, target: Item, sacrifice: Item) -> Option<(u32, Item)> {
+    /// returns a tuple containing the price, resulting item, and whether enchantment levels are lost.
+    pub fn combine(&self, target: Item, sacrifice: Item) -> Option<(u32, Item, bool)> {
         let sacrifice_is_book = sacrifice.item_type() == &ItemType::EnchantedBook;
 
         // if the two item types are incompatible, return None
@@ -45,6 +45,7 @@ impl Anvil {
         }
 
         let mut new_item = target.clone();
+        let mut is_acceptable = true;
 
         let mut total_cost = target.work_penalty() + sacrifice.work_penalty();
 
@@ -62,6 +63,12 @@ impl Anvil {
                     .min(enchantment.max_level());
 
                     new_item.enchant(enchantment, new_level);
+
+                    // the combination is not acceptable if an enchantment is "lost"
+                    // TODO: this is stupid
+                    if sacrifice_level != target_level {
+                        is_acceptable = false;
+                    }
 
                     // in java, the enchantment cost is the final level.
                     // in bedrock, it's the difference between the final and initial levels.
@@ -97,7 +104,7 @@ impl Anvil {
         }
 
         new_item.increment_anvil_uses();
-        Some((total_cost, new_item))
+        Some((total_cost, new_item, is_acceptable))
     }
 
     /// given a vector of source items, this function checks all the possible ways to combine the items together.
@@ -118,7 +125,7 @@ impl Anvil {
         let e_book_count = e_books.len();
         let e_book_permutations = e_books.into_iter().permutations(e_book_count);
 
-        for permutation in e_book_permutations {
+        'permutations: for permutation in e_book_permutations {
             let mut items: Vec<Item> = permutation.into_iter().map(|i| i.clone()).collect();
             items.insert(0, source_items[0].clone());
 
@@ -133,7 +140,11 @@ impl Anvil {
                     let item1 = items.remove(0);
                     let item2 = items.remove(0);
 
-                    let (cost, new_item) = self.combine(item1, item2).unwrap();
+                    let (cost, new_item, acceptable) = self.combine(item1, item2).unwrap();
+
+                    if !acceptable {
+                        continue 'permutations;
+                    }
 
                     new_items.push(new_item);
                     total_cost += cost;
@@ -187,11 +198,11 @@ mod tests {
             // assert costs
             let res = Anvil::new_java().combine($item1.clone(), $item2.clone());
             assert!(res.is_some());
-            let (cost, item) = res.unwrap();
+            let (cost, item, _) = res.unwrap();
 
             let res2 = Anvil::new_bedrock().combine($item1.clone(), $item2.clone());
             assert!(res2.is_some());
-            let (cost2, item2) = res2.unwrap();
+            let (cost2, item2, _) = res2.unwrap();
 
             assert_eq!(cost, $java_cost);
             assert_eq!(cost2, $bedrock_cost);

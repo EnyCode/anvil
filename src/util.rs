@@ -1,5 +1,3 @@
-use crate::{anvil::Anvil, item::Item};
-
 /// converts an integer to a roman numeral with one space prior.
 /// the number 1 will return an empty string.
 /// ```
@@ -42,18 +40,4 @@ pub fn prettify_pascal_case(string: String) -> String {
         .replace(" Of ", " of ")
         .replace(" On ", " on ")
         .replace(" A ", " a ")
-}
-
-/// converts from a vector of source items into a single output item.
-/// this is done by combining all the items in a java anvil.
-pub fn target_for_source_items(source_items: &Vec<Item>) -> Item {
-    let mut source_items = source_items.clone();
-
-    let anvil = Anvil::new_java();
-    let target = source_items.remove(0);
-
-    source_items.into_iter().fold(target, |target, sacrifice| {
-        let (_, item) = anvil.combine(target, sacrifice).unwrap();
-        item
-    })
 }

@@ -1,4 +1,5 @@
 use std::fmt::Display;
+use strum::EnumIter;
 
 use crate::{enchantments::Enchantment, util::prettify_pascal_case};
 
@@ -264,24 +265,6 @@ macro_rules! item {
 }
 
 pub(crate) use item;
-
-macro_rules! target_item {
-    ($item_type: expr, $( $enchantment: expr ),+) => {{
-        use crate::item::{item, Item, ItemType};
-
-        let mut items = vec![Item::new($item_type)];
-        $(
-            items.push(item!(
-                ItemType::EnchantedBook,
-                ($enchantment, $enchantment.max_level())
-            ));
-        )+
-        items
-    }};
-}
-
-use strum::EnumIter;
-pub(crate) use target_item;
 
 #[cfg(test)]
 mod tests {

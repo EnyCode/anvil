@@ -1,168 +1,81 @@
-use crate::{
-    enchantments::Enchantment,
-    item::{target_item, Item},
-};
+use crate::item::Item;
 
-pub fn presets() -> Vec<Vec<Item>> {
+#[derive(Clone)]
+pub struct Preset {
+    pub items: Vec<Item>,
+    pub books: Vec<Item>,
+    pub result: Item,
+}
+
+pub fn presets() -> Vec<Preset> {
     vec![
-        target_item!(
-            ItemType::Pickaxe,
-            Enchantment::Unbreaking,
-            Enchantment::Mending,
-            Enchantment::Efficiency,
-            Enchantment::Fortune
+        preset!(Pickaxe, Unbreaking, Mending, Efficiency, Fortune),
+        preset!(Pickaxe, Unbreaking, Mending, Efficiency, SilkTouch),
+        preset!(Sword, Unbreaking, Mending, Sharpness, Looting, FireAspect),
+        preset!(Axe, Unbreaking, Mending, Efficiency, Sharpness, SilkTouch),
+        preset!(Shovel, Unbreaking, Mending, Efficiency, SilkTouch),
+        preset!(Hoe, Unbreaking, Mending, Efficiency, Fortune),
+        preset!(Bow, Unbreaking, Mending, Power, Flame),
+        preset!(Bow, Unbreaking, Infinity, Power, Flame),
+        preset!(Crossbow, Unbreaking, Mending, QuickCharge, Piercing),
+        preset!(Trident, Unbreaking, Mending, Loyalty, Channeling, Impaling),
+        preset!(Trident, Unbreaking, Mending, Riptide, Impaling),
+        preset!(Mace, Unbreaking, Density, WindBurst, Mending),
+        preset!(
+            Helmet,
+            Unbreaking,
+            Mending,
+            ProjectileProtection,
+            Respiration,
+            AquaAffinity,
+            Thorns
         ),
-        target_item!(
-            ItemType::Pickaxe,
-            Enchantment::Unbreaking,
-            Enchantment::Mending,
-            Enchantment::Efficiency,
-            Enchantment::SilkTouch
+        preset!(Chestplate, Unbreaking, Mending, BlastProtection, Thorns),
+        preset!(Leggings, Unbreaking, Mending, Protection, Thorns, SwiftSneak),
+        preset!(
+            Boots,
+            Unbreaking,
+            Mending,
+            FireProtection,
+            FeatherFalling,
+            DepthStrider,
+            SoulSpeed,
+            Thorns
         ),
-        target_item!(
-            ItemType::Sword,
-            Enchantment::Unbreaking,
-            Enchantment::Mending,
-            Enchantment::Sharpness,
-            Enchantment::Looting,
-            Enchantment::FireAspect
-        ),
-        target_item!(
-            ItemType::Axe,
-            Enchantment::Unbreaking,
-            Enchantment::Mending,
-            Enchantment::Efficiency,
-            Enchantment::Sharpness,
-            Enchantment::SilkTouch
-        ),
-        target_item!(
-            ItemType::Shovel,
-            Enchantment::Unbreaking,
-            Enchantment::Mending,
-            Enchantment::Efficiency,
-            Enchantment::SilkTouch
-        ),
-        target_item!(
-            ItemType::Hoe,
-            Enchantment::Unbreaking,
-            Enchantment::Mending,
-            Enchantment::Efficiency,
-            Enchantment::Fortune
-        ),
-        target_item!(
-            ItemType::Bow,
-            Enchantment::Unbreaking,
-            Enchantment::Mending,
-            Enchantment::Power,
-            Enchantment::Flame
-        ),
-        target_item!(
-            ItemType::Bow,
-            Enchantment::Unbreaking,
-            Enchantment::Infinity,
-            Enchantment::Power,
-            Enchantment::Flame
-        ),
-        target_item!(
-            ItemType::Crossbow,
-            Enchantment::Unbreaking,
-            Enchantment::Mending,
-            Enchantment::QuickCharge,
-            Enchantment::Piercing
-        ),
-        target_item!(
-            ItemType::Trident,
-            Enchantment::Unbreaking,
-            Enchantment::Mending,
-            Enchantment::Loyalty,
-            Enchantment::Channeling,
-            Enchantment::Impaling
-        ),
-        target_item!(
-            ItemType::Trident,
-            Enchantment::Unbreaking,
-            Enchantment::Mending,
-            Enchantment::Riptide,
-            Enchantment::Impaling
-        ),
-        target_item!(
-            ItemType::Mace,
-            Enchantment::Unbreaking,
-            Enchantment::Density,
-            Enchantment::WindBurst,
-            Enchantment::Mending
-        ),
-        target_item!(
-            ItemType::Helmet,
-            Enchantment::Unbreaking,
-            Enchantment::Mending,
-            Enchantment::ProjectileProtection,
-            Enchantment::Respiration,
-            Enchantment::AquaAffinity,
-            Enchantment::Thorns
-        ),
-        target_item!(
-            ItemType::Chestplate,
-            Enchantment::Unbreaking,
-            Enchantment::Mending,
-            Enchantment::BlastProtection,
-            Enchantment::Thorns
-        ),
-        target_item!(
-            ItemType::Leggings,
-            Enchantment::Unbreaking,
-            Enchantment::Mending,
-            Enchantment::Protection,
-            Enchantment::Thorns,
-            Enchantment::SwiftSneak
-        ),
-        target_item!(
-            ItemType::Boots,
-            Enchantment::Unbreaking,
-            Enchantment::Mending,
-            Enchantment::FireProtection,
-            Enchantment::FeatherFalling,
-            Enchantment::DepthStrider,
-            Enchantment::SoulSpeed,
-            Enchantment::Thorns
-        ),
-        target_item!(
-            ItemType::Shield,
-            Enchantment::Unbreaking,
-            Enchantment::Mending
-        ),
-        target_item!(
-            ItemType::Elytra,
-            Enchantment::Unbreaking,
-            Enchantment::Mending
-        ),
-        target_item!(
-            ItemType::Shears,
-            Enchantment::Unbreaking,
-            Enchantment::Mending,
-            Enchantment::Efficiency
-        ),
-        target_item!(
-            ItemType::FlintAndSteel,
-            Enchantment::Unbreaking,
-            Enchantment::Mending
-        ),
-        target_item!(
-            ItemType::FishingRod,
-            Enchantment::Unbreaking,
-            Enchantment::Mending,
-            Enchantment::LuckOfTheSea,
-            Enchantment::Lure
-        ),
-        target_item!(
-            ItemType::CarrotOnAStick,
-            Enchantment::Unbreaking,
-            Enchantment::Mending
-        ),
-        target_item!(
-            ItemType::WarpedFungusOnAStick,
-            Enchantment::Unbreaking,
-            Enchantment::Mending
-        ),
+        preset!(Shield, Unbreaking, Mending),
+        preset!(Elytra, Unbreaking, Mending),
+        preset!(Shears, Unbreaking, Mending, Efficiency),
+        preset!(FlintAndSteel, Unbreaking, Mending),
+        preset!(FishingRod, Unbreaking, Mending, LuckOfTheSea, Lure),
+        preset!(CarrotOnAStick, Unbreaking, Mending),
+        preset!(WarpedFungusOnAStick, Unbreaking, Mending),
     ]
 }
+
+macro_rules! preset {
+    ($item_type: expr, $( $enchantment: expr ),+) => {{
+        use crate::item::{item, Item, ItemType::*};
+        use crate::enchantments::Enchantment::*;
+
+        let mut preset = Preset {
+            items: vec![Item::new($item_type)],
+            books: Vec::new(),
+            result: item!(
+                $item_type,
+                $( ($enchantment, $enchantment.max_level()) ),+
+            ),
+        };
+
+        $(
+            let ench = $enchantment;
+            for _ in 0..2u32.pow(ench.max_level() - ench.max_obtainable()) {
+                preset.books.push(item!(
+                    EnchantedBook,
+                    ($enchantment, ench.max_obtainable())
+                ));
+            }
+        )+
+        preset
+    }};
+}
+use preset;

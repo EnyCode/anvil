@@ -119,6 +119,14 @@ impl Enchantment {
         }
     }
 
+    /// returns the maximum level that can be obtained in survival gameplay
+    pub fn max_obtainable(&self) -> u32 {
+        match self {
+            Self::WindBurst => 1,
+            _ => self.max_level(),
+        }
+    }
+
     /// returns `true` if this enchantment conflicts with any of the given ones.
     /// conflicting enchantments means they cannot be applied together (e.g. Silk Touch and Fortune)
     pub fn is_conflicting_with(&self, existing: &Vec<&Enchantment>) -> bool {
