@@ -44,9 +44,9 @@ pub fn presets() -> Vec<Preset> {
         ),
         preset!(Shield, Unbreaking, Mending),
         preset!(Elytra, Unbreaking, Mending),
+        preset!(FishingRod, Unbreaking, Mending, LuckOfTheSea, Lure),
         preset!(Shears, Unbreaking, Mending, Efficiency),
         preset!(FlintAndSteel, Unbreaking, Mending),
-        preset!(FishingRod, Unbreaking, Mending, LuckOfTheSea, Lure),
         preset!(CarrotOnAStick, Unbreaking, Mending),
         preset!(WarpedFungusOnAStick, Unbreaking, Mending),
     ]

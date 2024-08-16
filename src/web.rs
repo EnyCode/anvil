@@ -57,7 +57,13 @@ impl Component for App {
                 true
             }
             AppMessage::EditItem(index) => {
-                self.source_items.as_mut().unwrap().remove(index);
+                if let Some(source_items) = &mut self.source_items {
+                    source_items.remove(index);
+
+                    if source_items.is_empty() {
+                        self.source_items = None;
+                    }
+                }
 
                 true
             }
@@ -138,6 +144,7 @@ impl Component for App {
                             <span class="green">
                                 {results.highest_cost - results.lowest_cost}
                             </span>
+                            {format!("{:?}", results.rank)}
                         </h2>
                         <div class="rows">
                             {for rows}

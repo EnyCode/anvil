@@ -14,6 +14,13 @@ pub struct AnvilCombinationResults {
     pub lowest_solution: Vec<Item>,
     pub highest_cost: u32,
     pub highest_solution: Vec<Item>,
+    pub rank: AnvilCombinationRank,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum AnvilCombinationRank {
+    Perfect,
+    Flawed,
 }
 
 pub struct Anvil {
@@ -36,7 +43,11 @@ impl Anvil {
     /// combines the target and sacrifice items in this anvil.
     /// returns `None` if the items are incompatible.
     /// returns a tuple containing the price, resulting item, and whether enchantment levels are lost.
-    pub fn combine(&self, target: Item, sacrifice: Item) -> Option<(u32, Item, bool)> {
+    pub fn combine(
+        &self,
+        target: Item,
+        sacrifice: Item,
+    ) -> Option<(u32, Item, AnvilCombinationRank)> {
         let sacrifice_is_book = sacrifice.item_type() == &ItemType::EnchantedBook;
 
         // if the two item types are incompatible, return None
@@ -45,7 +56,7 @@ impl Anvil {
         }
 
         let mut new_item = target.clone();
-        let mut is_acceptable = true;
+        let mut rank = AnvilCombinationRank::Perfect;
 
         let mut total_cost = target.work_penalty() + sacrifice.work_penalty();
 
@@ -64,10 +75,9 @@ impl Anvil {
 
                     new_item.enchant(enchantment, new_level);
 
-                    // the combination is not acceptable if an enchantment is "lost"
-                    // TODO: this is stupid
+                    // the combination is flawed if an enchantment is "lost"
                     if sacrifice_level != target_level {
-                        is_acceptable = false;
+                        rank = AnvilCombinationRank::Flawed;
                     }
 
                     // in java, the enchantment cost is the final level.
@@ -104,7 +114,7 @@ impl Anvil {
         }
 
         new_item.increment_anvil_uses();
-        Some((total_cost, new_item, is_acceptable))
+        Some((total_cost, new_item, rank))
     }
 
     /// given a vector of source items, this function checks all the possible ways to combine the items together.
@@ -112,6 +122,9 @@ impl Anvil {
     pub fn combine_many(&self, source_items: Vec<Item>) -> AnvilCombinationResults {
         let mut lowest_cost = u32::MAX;
         let mut lowest_solution = Vec::new();
+
+        let mut lowest_cost_flawed = u32::MAX;
+        let mut lowest_solution_flawed = Vec::new();
 
         let mut highest_cost = u32::MIN;
         let mut highest_solution = Vec::new();
@@ -125,7 +138,7 @@ impl Anvil {
         let e_book_count = e_books.len();
         let e_book_permutations = e_books.into_iter().permutations(e_book_count);
 
-        'permutations: for permutation in e_book_permutations {
+        for permutation in e_book_permutations {
             let mut items: Vec<Item> = permutation.into_iter().map(|i| i.clone()).collect();
             items.insert(0, source_items[0].clone());
 
@@ -133,6 +146,7 @@ impl Anvil {
 
             // combine all the items together
             let mut total_cost = 0;
+            let mut rank = AnvilCombinationRank::Perfect;
             while items.len() > 1 {
                 let mut new_items = Vec::new();
 
@@ -140,10 +154,10 @@ impl Anvil {
                     let item1 = items.remove(0);
                     let item2 = items.remove(0);
 
-                    let (cost, new_item, acceptable) = self.combine(item1, item2).unwrap();
+                    let (cost, new_item, new_rank) = self.combine(item1, item2).unwrap();
 
-                    if !acceptable {
-                        continue 'permutations;
+                    if new_rank == AnvilCombinationRank::Flawed {
+                        rank = AnvilCombinationRank::Flawed;
                     }
 
                     new_items.push(new_item);
@@ -157,9 +171,12 @@ impl Anvil {
                 items = new_items;
             }
 
-            if total_cost < lowest_cost {
+            if total_cost < lowest_cost && rank == AnvilCombinationRank::Perfect {
                 lowest_cost = total_cost;
                 lowest_solution = items_original;
+            } else if total_cost < lowest_cost_flawed && rank == AnvilCombinationRank::Flawed {
+                lowest_cost_flawed = total_cost;
+                lowest_solution_flawed = items_original;
             } else if total_cost > highest_cost {
                 highest_cost = total_cost;
                 highest_solution = items_original;
@@ -173,11 +190,21 @@ impl Anvil {
             highest_solution = lowest_solution.clone();
         }
 
+        // if there aren't any perfect solutions, go with a flawed one instead
+        let rank = if lowest_cost == u32::MAX {
+            lowest_cost = lowest_cost_flawed;
+            lowest_solution = lowest_solution_flawed;
+            AnvilCombinationRank::Flawed
+        } else {
+            AnvilCombinationRank::Perfect
+        };
+
         AnvilCombinationResults {
             lowest_cost,
             lowest_solution,
             highest_cost,
             highest_solution,
+            rank,
         }
     }
 }

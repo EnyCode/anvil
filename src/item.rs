@@ -7,19 +7,14 @@ use crate::{enchantments::Enchantment, util::prettify_pascal_case};
 pub enum ItemType {
     EnchantedBook,
 
-    // tools
+    // common
     Pickaxe,
+    Sword,
     Axe,
     Shovel,
     Hoe,
-    Shears,
-    FlintAndSteel,
-    FishingRod,
-    CarrotOnAStick,
-    WarpedFungusOnAStick,
 
-    // combat
-    Sword,
+    // less common
     Bow,
     Crossbow,
     Trident,
@@ -32,6 +27,13 @@ pub enum ItemType {
     Boots,
     Shield,
     Elytra,
+
+    // uncommon
+    FishingRod,
+    Shears,
+    FlintAndSteel,
+    CarrotOnAStick,
+    WarpedFungusOnAStick,
 }
 
 #[derive(Clone, Debug, PartialEq)]
