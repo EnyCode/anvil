@@ -1,5 +1,5 @@
 use strum::IntoEnumIterator;
-use yew::{classes, function_component, html, Component, Context, Html, Properties};
+use yew::{classes, function_component, html, AttrValue, Component, Context, Html, Properties};
 
 use crate::{
     anvil::Anvil,
@@ -16,7 +16,8 @@ pub struct App {
 
 pub enum AppMessage {
     ApplyPreset(Preset),
-    SetItemType(ItemType),
+    AddItem(ItemType),
+    EditItem(usize),
     ToggleEnchantment(Enchantment),
 }
 
@@ -37,8 +38,27 @@ impl Component for App {
                 self.source_items = Some([preset.items, preset.books].concat());
                 true
             }
-            AppMessage::SetItemType(item_type) => {
-                self.source_items = Some(vec![Item::new(item_type)]);
+            AppMessage::AddItem(item_type) => {
+                // item can be added if its type already exists in the items, or it's an enchanted book
+                let can_add = self.source_items.as_ref().map_or(true, |items| {
+                    items.iter().any(|item| item.item_type() == &item_type)
+                }) || item_type == ItemType::EnchantedBook;
+
+                if can_add {
+                    if self.source_items.is_none() {
+                        self.source_items = Some(Vec::new());
+                    }
+                    self.source_items
+                        .as_mut()
+                        .unwrap()
+                        .push(Item::new(item_type));
+                }
+
+                true
+            }
+            AppMessage::EditItem(index) => {
+                self.source_items.as_mut().unwrap().remove(index);
+
                 true
             }
             AppMessage::ToggleEnchantment(enchantment) => {
@@ -87,13 +107,13 @@ impl Component for App {
                         new_items.push(result.clone());
 
                         rows.push(html! {
-                            <div class={classes!("row")}>
-                                <ItemComponent item={item1} />
+                            <div class="row">
+                                <ItemComponent item={item1} hover={false} />
                                 {"+"}
-                                <ItemComponent item={item2} />
+                                <ItemComponent item={item2} hover={false} />
                                 {"="}
                                 <ItemComponent item={result} />
-                                <span class={classes!("green")}>
+                                <span class="green">
                                     {format!("{cost} levels")}
                                 </span>
                             </div>
@@ -107,19 +127,19 @@ impl Component for App {
                     <>
                         <h1>
                             {format!("{} - ", items[0].item_type())}
-                            <span class={classes!("green")}>
+                            <span class="green">
                                 {format!("{} levels", results.lowest_cost)}
                             </span>
                         </h1>
                         <h2>
                             {"Maximum "}
-                            <span class={classes!("green")}>{results.highest_cost}</span>
+                            <span class="green">{results.highest_cost}</span>
                             {" - Saves "}
-                            <span class={classes!("green")}>
+                            <span class="green">
                                 {results.highest_cost - results.lowest_cost}
                             </span>
                         </h2>
-                        <div class={classes!("rows")}>
+                        <div class="rows">
                             {for rows}
                         </div>
                     </>
@@ -132,7 +152,7 @@ impl Component for App {
             <>
                 <div class="container">
                     <h1>{"Presets"}</h1>
-                    <div id="presets">
+                    <div class="items">
                         {for presets().into_iter().map(|preset| {
                             // no i dont know why im cloning twice.
                             let preset_clone = preset.clone();
@@ -140,36 +160,41 @@ impl Component for App {
                                 <div
                                     onclick={ctx.link().callback(move |_| AppMessage::ApplyPreset(preset_clone.clone()))}
                                 >
-                                    <ItemComponent
-                                        item={preset.result}
-                                        hover={true}
-                                    />
+                                    <ItemComponent item={preset.result} />
                                 </div>
                             }
                         })}
                     </div>
 
                     <h1>{"Add Items"}</h1>
-                    <div id="items">
-                        {for ItemType::iter().map(|item_type| {
-                            let selected = match &self.source_items {
-                                Some(source_items) => source_items[0].item_type() == &item_type,
-                                None => false,
-                            };
-
-                            html! {
-                                <div
-                                    onclick={ctx.link().callback(move |_| AppMessage::SetItemType(item_type))}
-                                >
-                                    <ItemComponent
-                                        item={Item::new(item_type)}
-                                        hover={true}
-                                        {selected}
-                                    />
-                                </div>
-                            }
+                    <div class="items">
+                        {for ItemType::iter().map(|item_type| html! {
+                            <div
+                                onclick={ctx.link().callback(move |_| AppMessage::AddItem(item_type))}
+                            >
+                                <ItemComponent item={Item::new(item_type)} />
+                            </div>
                         })}
                     </div>
+                </div>
+
+                <div class="container">
+                    <h1>{ "Inventory" }</h1>
+
+                    if let Some(source_items) = &self.source_items {
+                        <div class="items">
+                            {for source_items.iter().enumerate().map(|(i, item)| html! {
+                                <div
+                                    onclick={ctx.link().callback(move |_| AppMessage::EditItem(i))}
+                                >
+                                    <ItemComponent
+                                        item={item.clone()}
+                                        hint={"Click to edit"}
+                                    />
+                                </div>
+                            })}
+                        </div>
+                    }
                 </div>
 
                 if let Some(source_items) = &self.source_items {
@@ -221,10 +246,12 @@ impl Component for App {
 #[derive(PartialEq, Properties)]
 pub struct ItemProps {
     pub item: Item,
-    #[prop_or(false)]
+    #[prop_or(true)]
     pub hover: bool,
     #[prop_or(false)]
     pub selected: bool,
+    #[prop_or_default]
+    pub hint: AttrValue,
 }
 
 #[function_component]
@@ -272,6 +299,10 @@ fn ItemComponent(props: &ItemProps) -> Html {
                         }
                     })}
                 </div>
+
+                if props.hint.as_str().len() > 0 {
+                    <div class="blue">{props.hint.clone()}</div>
+                }
             </div>
         </div>
     }
