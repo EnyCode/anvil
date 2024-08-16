@@ -7,10 +7,14 @@
     --shadow-color: #3f3f3f;
 }
 
+* {
+    text-shadow: 0.125em 0.125em var(--shadow-color);
+}
+
 body {
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 6em;
     margin: 8em auto;
 
@@ -27,10 +31,16 @@ body {
     font-size: 4px;
 }
 
+body > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6em;
+}
+
 h1,
 h2 {
     font-size: 8em;
-    text-shadow: 0.125em 0.125em var(--shadow-color);
 
     font-weight: normal;
     margin: 0;
@@ -57,6 +67,14 @@ h2 {
     > h1:not(:first-child) {
         margin-top: 0.25em;
         margin-bottom: 0.25em;
+    }
+
+    > h1:last-child {
+        margin-bottom: 0;
+    }
+
+    &.center > h1 {
+        text-align: center;
     }
 }
 
@@ -87,6 +105,32 @@ h2 {
     }
 }
 
+.anvil {
+    justify-content: center;
+
+    > :nth-child(2) {
+        width: 31em;
+        height: 18em;
+
+        background: url(public/plus.png);
+        background-size: cover;
+    }
+
+    > :nth-child(4) {
+        width: 40em;
+        height: 18em;
+
+        background: url(public/becomes.png);
+        background-size: cover;
+    }
+
+    + span {
+        align-self: flex-end;
+        font-size: 8em;
+        margin: 0.25em 0.125em;
+    }
+}
+
 #enchantments {
     display: flex;
     flex-direction: column;
@@ -105,8 +149,9 @@ h2 {
 
 footer {
     position: fixed;
-    top: 1em;
-    right: 1em;
+    bottom: 1em;
+    left: 50%;
+    transform: translateX(-50%);
 
     font-size: 16px;
 }
@@ -218,7 +263,6 @@ a {
 
         > * {
             font-size: 8em;
-            text-shadow: 0.125em 0.125em var(--shadow-color);
         }
 
         > :nth-child(2) {
@@ -299,6 +343,14 @@ a {
 .green {
     color: #5f5;
     --shadow-color: #153f15;
+}
+
+.green-xp {
+    color: #7efc20;
+    --shadow-color: #203e08;
+
+    padding: 0.125em 0.25em;
+    background-color: #898989;
 }
 
 .blue {

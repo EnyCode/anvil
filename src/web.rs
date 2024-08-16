@@ -94,7 +94,7 @@ impl Component for App {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        let body_html = match &self.source_items {
+        let result_html = match &self.source_items {
             Some(source_items) => {
                 let results = self.anvil.combine_many(source_items.clone());
 
@@ -113,16 +113,18 @@ impl Component for App {
                         new_items.push(result.clone());
 
                         rows.push(html! {
-                            <div class="row">
-                                <ItemComponent item={item1} hover={false} />
-                                {"+"}
-                                <ItemComponent item={item2} hover={false} />
-                                {"="}
-                                <ItemComponent item={result} />
-                                <span class="green">
-                                    {format!("{cost} levels")}
+                            <>
+                                <div class="anvil items">
+                                    <ItemComponent item={item1} />
+                                    <div />
+                                    <ItemComponent item={item2} />
+                                    <div />
+                                    <ItemComponent item={result} />
+                                </div>
+                                <span class="green-xp">
+                                    {format!("Enchantment Cost: {cost}")}
                                 </span>
-                            </div>
+                            </>
                         });
                     }
 
@@ -130,32 +132,19 @@ impl Component for App {
                 }
 
                 html! {
-                    <>
-                        <h1>
-                            {format!("{} - ", items[0].item_type())}
-                            <span class="green">
-                                {format!("{} levels", results.lowest_cost)}
-                            </span>
+                    <div class="container center">
+                        <h1>{"Repair & Name"}</h1>
+                        <div class="rows">{for rows}</div>
+                        <h1 class="green-xp">
+                            {format!("Total Cost: {} (saves {})", results.lowest_cost, results.highest_cost - results.lowest_cost)}
                         </h1>
-                        <h2>
-                            {"Maximum "}
-                            <span class="green">{results.highest_cost}</span>
-                            {" - Saves "}
-                            <span class="green">
-                                {results.highest_cost - results.lowest_cost}
-                            </span>
-                            {format!("{:?}", results.rank)}
-                        </h2>
-                        <div class="rows">
-                            {for rows}
-                        </div>
-                    </>
+                    </div>
                 }
             }
             None => html! {},
         };
 
-        html! {
+        let item_html = html! {
             <>
                 <div class="container">
                     <h1>{"Presets"}</h1>
@@ -237,8 +226,14 @@ impl Component for App {
                         }
                     </div>
                 }
+            </>
+        };
 
-                {body_html}
+        html! {
+            <>
+                <div>{item_html}</div>
+
+                <div>{result_html}</div>
 
                 <footer>
                     <a href="https://github.com/EnyCode/anvil/" target="_blank">
