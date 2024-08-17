@@ -1,5 +1,6 @@
+use itertools::Itertools;
 use std::fmt::Display;
-use strum::EnumIter;
+use strum::{EnumIter, IntoEnumIterator};
 
 use crate::{enchantments::Enchantment, util::prettify_pascal_case};
 
@@ -34,6 +35,18 @@ pub enum ItemType {
     FlintAndSteel,
     CarrotOnAStick,
     WarpedFungusOnAStick,
+}
+
+impl ItemType {
+    pub fn is_armor(&self) -> bool {
+        [
+            ItemType::Helmet,
+            ItemType::Chestplate,
+            ItemType::Leggings,
+            ItemType::Boots,
+        ]
+        .contains(self)
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -134,114 +147,72 @@ impl Item {
         }
     }
 
-    pub fn compatible_enchantments(&self) -> Vec<Enchantment> {
-        [
-            match self.item_type {
-                // special case
-                ItemType::EnchantedBook => Vec::new(),
+    pub fn compatible_enchantments(&self) -> impl Iterator<Item = Enchantment> {
+        use Enchantment::*;
+        use ItemType::*;
 
-                ItemType::Pickaxe | ItemType::Shovel | ItemType::Hoe => vec![
-                    Enchantment::Efficiency,
-                    Enchantment::SilkTouch,
-                    Enchantment::Fortune,
-                ],
-                ItemType::Axe => vec![
-                    Enchantment::Sharpness,
-                    Enchantment::Smite,
-                    Enchantment::BaneOfArthropods,
-                    Enchantment::Efficiency,
-                    Enchantment::SilkTouch,
-                    Enchantment::Fortune,
-                ],
-                ItemType::Shears => vec![Enchantment::Efficiency],
-                ItemType::FlintAndSteel
-                | ItemType::CarrotOnAStick
-                | ItemType::WarpedFungusOnAStick
-                | ItemType::Shield => Vec::new(),
-                ItemType::FishingRod => vec![Enchantment::LuckOfTheSea, Enchantment::Lure],
-                ItemType::Sword => vec![
-                    Enchantment::Sharpness,
-                    Enchantment::Smite,
-                    Enchantment::BaneOfArthropods,
-                    Enchantment::Knockback,
-                    Enchantment::FireAspect,
-                    Enchantment::Looting,
-                    Enchantment::SweepingEdge,
-                ],
-                ItemType::Bow => vec![
-                    Enchantment::Power,
-                    Enchantment::Punch,
-                    Enchantment::Flame,
-                    Enchantment::Infinity,
-                ],
-                ItemType::Crossbow => vec![
-                    Enchantment::Multishot,
-                    Enchantment::Piercing,
-                    Enchantment::QuickCharge,
-                ],
-                ItemType::Trident => vec![
-                    Enchantment::Impaling,
-                    Enchantment::Riptide,
-                    Enchantment::Loyalty,
-                    Enchantment::Channeling,
-                ],
-                ItemType::Mace => vec![
-                    Enchantment::Density,
-                    Enchantment::Breach,
-                    Enchantment::WindBurst,
-                    Enchantment::Smite,
-                    Enchantment::BaneOfArthropods,
-                    Enchantment::FireAspect,
-                ],
-                // TODO: remove duplicate armour enchantments?
-                ItemType::Helmet => vec![
-                    Enchantment::Protection,
-                    Enchantment::FireProtection,
-                    Enchantment::BlastProtection,
-                    Enchantment::ProjectileProtection,
-                    Enchantment::Thorns,
-                    Enchantment::Respiration,
-                    Enchantment::AquaAffinity,
-                    Enchantment::CurseOfBinding,
-                ],
-                ItemType::Chestplate => vec![
-                    Enchantment::Protection,
-                    Enchantment::FireProtection,
-                    Enchantment::BlastProtection,
-                    Enchantment::ProjectileProtection,
-                    Enchantment::Thorns,
-                    Enchantment::CurseOfBinding,
-                ],
-                ItemType::Leggings => vec![
-                    Enchantment::Protection,
-                    Enchantment::FireProtection,
-                    Enchantment::BlastProtection,
-                    Enchantment::ProjectileProtection,
-                    Enchantment::Thorns,
-                    Enchantment::CurseOfBinding,
-                    Enchantment::SwiftSneak,
-                ],
-                ItemType::Boots => vec![
-                    Enchantment::Protection,
-                    Enchantment::FireProtection,
-                    Enchantment::FeatherFalling,
-                    Enchantment::BlastProtection,
-                    Enchantment::ProjectileProtection,
-                    Enchantment::Thorns,
-                    Enchantment::DepthStrider,
-                    Enchantment::CurseOfBinding,
-                    Enchantment::SoulSpeed,
-                ],
-                ItemType::Elytra => vec![Enchantment::CurseOfBinding],
-            },
-            // these enchantments can go on everything
-            vec![
-                Enchantment::Unbreaking,
-                Enchantment::Mending,
-                Enchantment::CurseOfVanishing,
+        let mut enchants = Vec::new();
+        if self.item_type == EnchantedBook {
+            enchants.extend(Enchantment::iter());
+        } else {
+            enchants.push(Unbreaking);
+            enchants.push(Mending);
+            enchants.push(CurseOfVanishing);
+        }
+
+        enchants.extend(match self.item_type {
+            EnchantedBook => Vec::new(),
+            Pickaxe | Shovel | Hoe => vec![Efficiency, SilkTouch, Fortune],
+            Axe => vec![
+                Sharpness,
+                Smite,
+                BaneOfArthropods,
+                Efficiency,
+                SilkTouch,
+                Fortune,
             ],
-        ]
-        .concat()
+            Shears => vec![Efficiency],
+            FlintAndSteel | CarrotOnAStick | WarpedFungusOnAStick | Shield => Vec::new(),
+            FishingRod => vec![LuckOfTheSea, Lure],
+            Sword => vec![
+                Sharpness,
+                Smite,
+                BaneOfArthropods,
+                Knockback,
+                FireAspect,
+                Looting,
+                SweepingEdge,
+            ],
+            Bow => vec![Power, Punch, Flame, Infinity],
+            Crossbow => vec![Multishot, Piercing, QuickCharge],
+            Trident => vec![Impaling, Riptide, Loyalty, Channeling],
+            Mace => vec![
+                Density,
+                Breach,
+                WindBurst,
+                Smite,
+                BaneOfArthropods,
+                FireAspect,
+            ],
+            Helmet => vec![Respiration, AquaAffinity],
+            Chestplate => Vec::new(),
+            Leggings => vec![SwiftSneak],
+            Boots => vec![FeatherFalling, DepthStrider, SoulSpeed],
+            Elytra => vec![CurseOfBinding],
+        });
+
+        if self.item_type.is_armor() {
+            enchants.extend(vec![
+                Enchantment::Protection,
+                Enchantment::FireProtection,
+                Enchantment::BlastProtection,
+                Enchantment::ProjectileProtection,
+                Enchantment::Thorns,
+                Enchantment::CurseOfBinding,
+            ]);
+        }
+
+        enchants.into_iter()
     }
 }
 

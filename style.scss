@@ -83,7 +83,8 @@ h2 {
     flex-wrap: wrap;
     width: 9 * 18em;
 
-    .item {
+    .item,
+    .enchantment {
         position: relative;
 
         box-sizing: content-box;
@@ -180,7 +181,8 @@ a {
     }
 }
 
-.item {
+.item,
+.enchantment {
     display: flex;
     align-items: center;
     gap: 0.25em;
@@ -229,23 +231,6 @@ a {
 
         &:hover > div {
             display: initial;
-        }
-    }
-
-    &.selected > span::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background-color: #fff;
-        animation: 0.25s infinite alternate linear pulse;
-
-        @keyframes pulse {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
         }
     }
 
@@ -333,6 +318,20 @@ a {
     @include icon(shield, 2, 2);
     @include icon(elytra, 3, 2);
     @include icon(mace, 4, 2);
+}
+
+.enchantment > span {
+    background-image: url(public/enchantments.png);
+    background-size: 800% 800%;
+
+    mask-image: url(public/enchantments.png);
+    mask-size: 800% 800%;
+    -webkit-mask-image: url(public/enchantments.png);
+    -webkit-mask-size: 800% 800%;
+
+    background-position: calc(-100% * var(--x)) calc(-100% * var(--y));
+    mask-position: calc(-100% * var(--x)) calc(-100% * var(--y));
+    -webkit-mask-position: calc(-100% * var(--x)) calc(-100% * var(--y));
 }
 
 .red {

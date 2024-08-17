@@ -175,7 +175,7 @@ impl Component for App {
                 </div>
 
                 <div class="container">
-                    <h1>{ "Inventory" }</h1>
+                    <h1>{"Inventory"}</h1>
 
                     if let Some(source_items) = &self.source_items {
                         <div class="items">
@@ -191,6 +191,16 @@ impl Component for App {
                             })}
                         </div>
                     }
+
+                    if let Some(source_items) = &self.source_items {
+                        <h1>{"Enchantments"}</h1>
+
+                        <div class="items">
+                            {for source_items[0].compatible_enchantments().into_iter().map(|enchant| html! {
+                                <EnchantmentComponent {enchant} />
+                            })}
+                        </div>
+                    }
                 </div>
 
                 if let Some(source_items) = &self.source_items {
@@ -199,11 +209,7 @@ impl Component for App {
                         {for
                             // get all compatible enchantments
                             // or all enchantments, if the item is an enchanted book
-                            if source_items[0].item_type() != &ItemType::EnchantedBook {
-                                source_items[0].compatible_enchantments().into_iter()
-                            } else {
-                                Enchantment::iter().collect::<Vec<_>>().into_iter()
-                            }
+                            source_items[0].compatible_enchantments()
                             .map(|enchantment| {
                                 let selected =  if source_items
                                     .iter()
@@ -246,14 +252,14 @@ impl Component for App {
 }
 
 #[derive(PartialEq, Properties)]
-pub struct ItemProps {
-    pub item: Item,
+struct ItemProps {
+    item: Item,
     #[prop_or(true)]
-    pub hover: bool,
+    hover: bool,
     #[prop_or(false)]
-    pub selected: bool,
+    selected: bool,
     #[prop_or_default]
-    pub hint: AttrValue,
+    hint: AttrValue,
 }
 
 #[function_component]
@@ -306,6 +312,25 @@ fn ItemComponent(props: &ItemProps) -> Html {
                     <div class="blue">{props.hint.clone()}</div>
                 }
             </div>
+        </div>
+    }
+}
+
+#[derive(PartialEq, Properties)]
+struct EnchantmentProps {
+    enchant: Enchantment,
+}
+
+#[function_component]
+fn EnchantmentComponent(props: &EnchantmentProps) -> Html {
+    let index = props.enchant as usize;
+    let x = index % 8;
+    let y = index / 8;
+
+    html! {
+        <div class="enchantment hover" style={format!("--x:{x};--y:{y}")}>
+            <span />
+            <div><span>{props.enchant}</span></div>
         </div>
     }
 }
