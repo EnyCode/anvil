@@ -204,6 +204,19 @@ a {
         -webkit-mask-size: 800% 800%;
     }
 
+    .level {
+        position: absolute;
+        bottom: -0.125em;
+        right: 0;
+
+        font-size: 8em;
+        color: #fff;
+        --shadow-color: #3f3f3f;
+
+        // fix text positioning?????
+        transform: translateY(-0.8px);
+    }
+
     &.enchanted > span {
         background-image: linear-gradient(#a5f3, #a5f3), url(public/items.png);
         background-blend-mode: color;
@@ -242,7 +255,7 @@ a {
         padding: 4em;
         margin: 0 20em;
 
-        color: #ffffff;
+        color: #fff;
         --shadow-color: #3f3f3f;
 
         line-height: 1.25;

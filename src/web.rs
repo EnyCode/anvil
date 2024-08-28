@@ -235,7 +235,10 @@ impl Component for App {
                                     .compatible_enchantments()
                                     .into_iter()
                             ).map(|enchant| html! {
-                                <EnchantmentComponent {enchant} />
+                                <EnchantmentComponent
+                                    {enchant}
+                                    level={self.source_items.as_ref().unwrap()[*selected_item].level_of(enchant)}
+                                />
                             })}
                         </div>
                     }
@@ -357,6 +360,7 @@ fn ItemComponent(props: &ItemProps) -> Html {
 #[derive(PartialEq, Properties)]
 struct EnchantmentProps {
     enchant: Enchantment,
+    level: Option<u32>,
 }
 
 #[function_component]
@@ -368,6 +372,9 @@ fn EnchantmentComponent(props: &EnchantmentProps) -> Html {
     html! {
         <div class="enchantment hover" style={format!("--x:{x};--y:{y}")}>
             <span />
+            if let Some(level) = props.level {
+                <aside class="level">{level}</aside>
+            }
             <div><span>{props.enchant}</span></div>
         </div>
     }
