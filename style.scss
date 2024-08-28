@@ -222,16 +222,6 @@ a {
         background-blend-mode: color;
     }
 
-    &.enchanted > div > span {
-        color: #5ff;
-        --shadow-color: #153f3f;
-    }
-
-    &.enchanted-book > div > span {
-        color: #ff5;
-        --shadow-color: #3f3f15;
-    }
-
     &.hover {
         position: relative;
 
@@ -356,6 +346,11 @@ a {
     --shadow-color: #3f1515;
 }
 
+.yellow {
+    color: #ff5;
+    --shadow-color: #3f3f15;
+}
+
 .green {
     color: #5f5;
     --shadow-color: #153f15;
@@ -369,7 +364,17 @@ a {
     background-color: #898989;
 }
 
+.light-blue {
+    color: #5ff;
+    --shadow-color: #153f3f;
+}
+
 .blue {
     color: #55f;
     --shadow-color: #15153f;
+}
+
+.magenta {
+    color: #f5f;
+    --shadow-color: #3f153f;
 }

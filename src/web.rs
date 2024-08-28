@@ -1,11 +1,13 @@
 use action::{Action, ActionComponent};
 use strum::IntoEnumIterator;
-use yew::{classes, function_component, html, AttrValue, Component, Context, Html, Properties};
+use yew::{
+    classes, function_component, html, AttrValue, Component, Context, Html, MouseEvent, Properties,
+};
 
 use crate::{
     anvil::Anvil,
     enchantments::Enchantment,
-    item::{item, Item, ItemType},
+    item::{Item, ItemType},
     presets::{presets, Preset},
     util::to_roman_numerals,
 };
@@ -23,7 +25,20 @@ pub enum AppMessage {
     AddItem(ItemType),
     ToggleSelect(usize),
     Action(Action),
-    ToggleEnchantment(Enchantment),
+    ModifyEnchantment(Enchantment, i32),
+}
+
+impl App {
+    fn target_item(&self) -> Option<&Item> {
+        self.source_items.as_ref().map(|items| &items[0])
+    }
+
+    fn selected_item(&self) -> Option<&Item> {
+        self.source_items
+            .as_ref()
+            .map(|source_items| self.selected_item.map(|selected| &source_items[selected]))
+            .flatten()
+    }
 }
 
 impl Component for App {
@@ -42,6 +57,7 @@ impl Component for App {
         match msg {
             AppMessage::ApplyPreset(preset) => {
                 self.source_items = Some([preset.items, preset.books].concat());
+                self.selected_item = None;
                 true
             }
             AppMessage::AddItem(item_type) => {
@@ -89,27 +105,22 @@ impl Component for App {
                 }
                 true
             }
-            AppMessage::ToggleEnchantment(enchantment) => {
-                // search for the enchantment
-                match self
-                    .source_items
-                    .as_ref()
-                    .unwrap()
-                    .iter()
-                    .position(|i| i.level_of(enchantment).is_some())
-                {
-                    // if the enchantment has been found, remove it
-                    Some(i) => {
-                        self.source_items.as_mut().unwrap().remove(i);
-                    }
-                    // if the enchantment isn't present, add it
-                    None => {
-                        self.source_items.as_mut().unwrap().push(item!(
-                            ItemType::EnchantedBook,
-                            (enchantment, enchantment.max_level())
-                        ));
-                    }
+            AppMessage::ModifyEnchantment(enchantment, level_change) => {
+                if let Some(selected) = &self.selected_item {
+                    let item = self
+                        .source_items
+                        .as_mut()
+                        .unwrap()
+                        .get_mut(*selected)
+                        .unwrap();
+                    let level = item.level_of(enchantment);
+                    let new_level = level
+                        .unwrap_or(0)
+                        .checked_add_signed(level_change)
+                        .unwrap_or(enchantment.max_level());
+                    item.enchant(enchantment, new_level);
                 }
+
                 true
             }
         }
@@ -219,7 +230,7 @@ impl Component for App {
                         </div>
                     }
 
-                    if let Some(selected_item) = &self.selected_item {
+                    if let Some(selected_item) = &self.selected_item() {
                         <h1>{"Actions"}</h1>
                         <div class="items">
                             <div onclick={ctx.link().callback(move |_| AppMessage::Action(Action::Remove))}>
@@ -230,49 +241,26 @@ impl Component for App {
                         <h1>{"Enchantments"}</h1>
 
                         <div class="items">
-                            {for Enchantment::friendly_sort(
-                                self.source_items.as_ref().unwrap()[*selected_item]
-                                    .compatible_enchantments()
-                                    .into_iter()
+                            {for Enchantment::friendly_sort_with(
+                                selected_item.compatible_enchantments().into_iter(),
+                                self.target_item().unwrap()
                             ).map(|enchant| html! {
-                                <EnchantmentComponent
-                                    {enchant}
-                                    level={self.source_items.as_ref().unwrap()[*selected_item].level_of(enchant)}
-                                />
+                                <div
+                                    onclick={ctx.link().callback(move |_| AppMessage::ModifyEnchantment(enchant, 1))}
+                                    oncontextmenu={ctx.link().callback(move |ev: MouseEvent| {
+                                        ev.prevent_default();
+                                        AppMessage::ModifyEnchantment(enchant, -1)
+                                    })}
+                                >
+                                    <EnchantmentComponent
+                                        {enchant}
+                                        level={selected_item.level_of(enchant)}
+                                    />
+                                </div>
                             })}
                         </div>
                     }
                 </div>
-
-                if let Some(source_items) = &self.source_items {
-                    <h2>{"Enchantments"}</h2>
-                    <div id="enchantments">
-                        {for
-                            // get all compatible enchantments
-                            // or all enchantments, if the item is an enchanted book
-                            source_items[0].compatible_enchantments()
-                            .map(|enchantment| {
-                                let selected =  if source_items
-                                    .iter()
-                                    .any(|i| i.level_of(enchantment).is_some())
-                                {
-                                    Some("selected")
-                                } else {
-                                    None
-                                };
-
-                                html! {
-                                    <div
-                                        class={classes!(selected)}
-                                        onclick={ctx.link().callback(move |_| AppMessage::ToggleEnchantment(enchantment))}
-                                    >
-                                        {enchantment}
-                                    </div>
-                                }
-                            })
-                        }
-                    </div>
-                }
             </>
         };
 
@@ -314,9 +302,11 @@ fn ItemComponent(props: &ItemProps) -> Html {
             .to_lowercase()
             .replace(' ', "-"),
     ];
+    let mut rarity = props.item.item_type().rarity();
 
     if props.item.enchantments().len() > 0 {
         classes.push("enchanted".to_string());
+        rarity.upgrade();
     }
 
     if props.hover {
@@ -330,7 +320,7 @@ fn ItemComponent(props: &ItemProps) -> Html {
         <div class={classes!(classes)}>
             <span />
             <div>
-                <span>
+                <span class={rarity.class()}>
                     {props.item.item_type()}
                 </span>
                 <div>

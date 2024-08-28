@@ -39,13 +39,50 @@ pub enum ItemType {
 
 impl ItemType {
     pub fn is_armor(&self) -> bool {
-        [
-            ItemType::Helmet,
-            ItemType::Chestplate,
-            ItemType::Leggings,
-            ItemType::Boots,
-        ]
-        .contains(self)
+        [Self::Helmet, Self::Chestplate, Self::Leggings, Self::Boots].contains(self)
+    }
+
+    pub fn rarity(&self) -> Rarity {
+        use ItemType::*;
+        use Rarity::*;
+
+        match self {
+            EnchantedBook => Book,
+            Trident => Rare,
+            Elytra | Mace => Epic,
+            _ => Common,
+        }
+    }
+}
+
+#[allow(dead_code)]
+pub enum Rarity {
+    Common,
+    Uncommon,
+    Rare,
+    Epic,
+    Book,
+}
+
+impl Rarity {
+    pub fn class(&self) -> Option<&'static str> {
+        match self {
+            Self::Common => None,
+            Self::Uncommon => Some("yellow"),
+            Self::Rare => Some("light-blue"),
+            Self::Epic => Some("magenta"),
+            Self::Book => Some("yellow"),
+        }
+    }
+
+    pub fn upgrade(&mut self) {
+        *self = match self {
+            Self::Common => Self::Rare,
+            Self::Uncommon => Self::Rare,
+            Self::Rare => Self::Epic,
+            Self::Epic => Self::Epic,
+            Self::Book => Self::Book,
+        };
     }
 }
 
@@ -109,9 +146,14 @@ impl Item {
     pub fn enchant(&mut self, enchantment: Enchantment, level: u32) {
         let level = u32::min(level, enchantment.max_level());
 
-        for existing_enchantment in &mut self.enchantments {
+        for (i, existing_enchantment) in self.enchantments.iter_mut().enumerate() {
             if existing_enchantment.0 == enchantment {
                 existing_enchantment.1 = level;
+
+                if level == 0 {
+                    self.enchantments.remove(i);
+                }
+
                 return;
             }
         }

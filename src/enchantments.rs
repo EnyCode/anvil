@@ -3,7 +3,7 @@ use std::{collections::HashMap, fmt::Display, sync::LazyLock};
 use itertools::Itertools;
 use strum::EnumIter;
 
-use crate::util::prettify_pascal_case;
+use crate::{item::Item, util::prettify_pascal_case};
 
 #[derive(Copy, Clone, Debug, EnumIter, PartialEq, Eq, Hash)]
 pub enum Enchantment {
@@ -301,6 +301,13 @@ impl Enchantment {
         iter: impl Iterator<Item = Enchantment>,
     ) -> impl Iterator<Item = Enchantment> {
         iter.sorted_by_cached_key(|e| e.friendly_index())
+    }
+
+    pub fn friendly_sort_with(
+        iter: impl Iterator<Item = Enchantment>,
+        item: &Item,
+    ) -> impl Iterator<Item = Enchantment> {
+        Self::friendly_sort(iter).sorted_by_cached_key(|e| !item.is_compatible(&e))
     }
 }
 
