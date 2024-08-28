@@ -1,3 +1,4 @@
+use action::{Action, ActionComponent};
 use strum::IntoEnumIterator;
 use yew::{classes, function_component, html, AttrValue, Component, Context, Html, Properties};
 
@@ -9,15 +10,19 @@ use crate::{
     util::to_roman_numerals,
 };
 
+mod action;
+
 pub struct App {
     anvil: Anvil,
     source_items: Option<Vec<Item>>,
+    selected_item: Option<usize>,
 }
 
 pub enum AppMessage {
     ApplyPreset(Preset),
     AddItem(ItemType),
-    EditItem(usize),
+    ToggleSelect(usize),
+    Action(Action),
     ToggleEnchantment(Enchantment),
 }
 
@@ -29,6 +34,7 @@ impl Component for App {
         Self {
             anvil: Anvil::new_java(),
             source_items: None,
+            selected_item: None,
         }
     }
 
@@ -56,15 +62,31 @@ impl Component for App {
 
                 true
             }
-            AppMessage::EditItem(index) => {
-                if let Some(source_items) = &mut self.source_items {
-                    source_items.remove(index);
-
-                    if source_items.is_empty() {
-                        self.source_items = None;
-                    }
+            AppMessage::ToggleSelect(index) => {
+                if self.selected_item.map_or(false, |sel| sel == index) {
+                    self.selected_item = None;
+                } else {
+                    self.selected_item = Some(index);
                 }
 
+                true
+            }
+            AppMessage::Action(action) => {
+                match action {
+                    Action::Remove => {
+                        if let Some(selected) = &self.selected_item {
+                            self.source_items.as_mut().unwrap().remove(*selected);
+
+                            let items = self.source_items.as_ref().unwrap();
+                            if items.is_empty() {
+                                self.source_items = None;
+                                self.selected_item = None;
+                            } else if items.len() == *selected {
+                                self.selected_item = Some(items.len() - 1);
+                            }
+                        }
+                    }
+                }
                 true
             }
             AppMessage::ToggleEnchantment(enchantment) => {
@@ -136,7 +158,11 @@ impl Component for App {
                         <h1>{"Repair & Name"}</h1>
                         <div class="rows">{for rows}</div>
                         <h1 class="green-xp">
-                            {format!("Total Cost: {} (saves {})", results.lowest_cost, results.highest_cost - results.lowest_cost)}
+                            {format!(
+                                "Total Cost: {} (saves {})",
+                                results.lowest_cost,
+                                results.highest_cost - results.lowest_cost
+                            )}
                         </h1>
                     </div>
                 }
@@ -181,22 +207,34 @@ impl Component for App {
                         <div class="items">
                             {for source_items.iter().enumerate().map(|(i, item)| html! {
                                 <div
-                                    onclick={ctx.link().callback(move |_| AppMessage::EditItem(i))}
+                                    onclick={ctx.link().callback(move |_| AppMessage::ToggleSelect(i))}
                                 >
                                     <ItemComponent
                                         item={item.clone()}
                                         hint={"Click to edit"}
+                                        selected={self.selected_item == Some(i)}
                                     />
                                 </div>
                             })}
                         </div>
                     }
 
-                    if let Some(source_items) = &self.source_items {
+                    if let Some(selected_item) = &self.selected_item {
+                        <h1>{"Actions"}</h1>
+                        <div class="items">
+                            <div onclick={ctx.link().callback(move |_| AppMessage::Action(Action::Remove))}>
+                                <ActionComponent action={Action::Remove} />
+                            </div>
+                        </div>
+
                         <h1>{"Enchantments"}</h1>
 
                         <div class="items">
-                            {for source_items[0].compatible_enchantments().into_iter().map(|enchant| html! {
+                            {for Enchantment::friendly_sort(
+                                self.source_items.as_ref().unwrap()[*selected_item]
+                                    .compatible_enchantments()
+                                    .into_iter()
+                            ).map(|enchant| html! {
                                 <EnchantmentComponent {enchant} />
                             })}
                         </div>

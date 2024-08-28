@@ -1,10 +1,11 @@
-use std::fmt::Display;
+use std::{collections::HashMap, fmt::Display, sync::LazyLock};
 
+use itertools::Itertools;
 use strum::EnumIter;
 
 use crate::util::prettify_pascal_case;
 
-#[derive(Copy, Clone, Debug, EnumIter, PartialEq)]
+#[derive(Copy, Clone, Debug, EnumIter, PartialEq, Eq, Hash)]
 pub enum Enchantment {
     Protection,
     FireProtection,
@@ -217,10 +218,108 @@ impl Enchantment {
             java_multipler
         }
     }
+
+    /// the index into a friendly ordering of enchantments
+    pub fn friendly_index(&self) -> usize {
+        use Enchantment::*;
+
+        macro_rules! map {
+            ($($ench: expr,)+) => {
+                LazyLock::new(#[allow(unused_assignments)] || {
+                    let mut map = HashMap::new();
+                    let mut i = 0;
+                    $(
+                        map.insert($ench, i);
+                        i += 1;
+                    )*
+                    map
+                })
+            };
+        }
+
+        static FRIENDLY: LazyLock<HashMap<Enchantment, usize>> = map![
+            // generic
+            Unbreaking,
+            Mending,
+            // tool
+            Efficiency,
+            Fortune,
+            SilkTouch,
+            // weapon
+            Sharpness,
+            Looting,
+            FireAspect,
+            Knockback,
+            SweepingEdge,
+            // bow
+            Power,
+            Infinity,
+            Flame,
+            Punch,
+            // armor
+            Protection,
+            FireProtection,
+            BlastProtection,
+            ProjectileProtection,
+            FeatherFalling,
+            Thorns,
+            // piece specific armor
+            AquaAffinity,
+            Respiration,
+            SwiftSneak,
+            DepthStrider,
+            SoulSpeed,
+            FrostWalker,
+            // mace
+            Density,
+            Breach,
+            WindBurst,
+            // trident
+            Impaling,
+            Loyalty,
+            Riptide,
+            Channeling,
+            // crossbow
+            Piercing,
+            QuickCharge,
+            Multishot,
+            // fishing rod
+            LuckOfTheSea,
+            Lure,
+            // rarely used
+            Smite,
+            BaneOfArthropods,
+            // curses
+            CurseOfBinding,
+            CurseOfVanishing,
+        ];
+
+        FRIENDLY[self]
+    }
+
+    pub fn friendly_sort(
+        iter: impl Iterator<Item = Enchantment>,
+    ) -> impl Iterator<Item = Enchantment> {
+        iter.sorted_by_cached_key(|e| e.friendly_index())
+    }
 }
 
 impl Display for Enchantment {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", prettify_pascal_case(format!("{self:?}")))
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use strum::IntoEnumIterator;
+
+    use super::Enchantment;
+
+    #[test]
+    fn all_enchantments_are_friendly() {
+        Enchantment::iter().for_each(|e| {
+            println!("{} => {}", e, e.friendly_index());
+        });
     }
 }

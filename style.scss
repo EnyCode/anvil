@@ -84,7 +84,8 @@ h2 {
     width: 9 * 18em;
 
     .item,
-    .enchantment {
+    .enchantment,
+    .action {
         position: relative;
 
         box-sizing: content-box;
@@ -95,7 +96,7 @@ h2 {
             transition: transform 0.4s;
         }
 
-        &:hover::after {
+        &:is(:not(.selected):hover, .selected:not(:hover))::after {
             content: '';
             display: block;
             position: absolute;
@@ -182,6 +183,7 @@ a {
 }
 
 .item,
+.action,
 .enchantment {
     display: flex;
     align-items: center;
@@ -318,6 +320,8 @@ a {
     @include icon(shield, 2, 2);
     @include icon(elytra, 3, 2);
     @include icon(mace, 4, 2);
+
+    @include icon(remove, 0, 7);
 }
 
 .enchantment > span {

@@ -203,12 +203,12 @@ impl Item {
 
         if self.item_type.is_armor() {
             enchants.extend(vec![
-                Enchantment::Protection,
-                Enchantment::FireProtection,
-                Enchantment::BlastProtection,
-                Enchantment::ProjectileProtection,
-                Enchantment::Thorns,
-                Enchantment::CurseOfBinding,
+                Protection,
+                FireProtection,
+                BlastProtection,
+                ProjectileProtection,
+                Thorns,
+                CurseOfBinding,
             ]);
         }
 
