@@ -70,10 +70,20 @@ impl Component for App {
                     if self.source_items.is_none() {
                         self.source_items = Some(Vec::new());
                     }
-                    self.source_items
-                        .as_mut()
-                        .unwrap()
-                        .push(Item::new(item_type));
+                    let source_items = self.source_items.as_mut().unwrap();
+                    let index = if item_type == ItemType::EnchantedBook {
+                        source_items.push(Item::new(item_type));
+                        source_items.len() - 1
+                    } else {
+                        let index = source_items
+                            .iter()
+                            .position(|item| item.item_type() == &ItemType::EnchantedBook)
+                            .unwrap_or(source_items.len());
+                        source_items.insert(index, Item::new(item_type));
+                        index
+                    };
+
+                    self.selected_item = Some(index);
                 }
 
                 true
@@ -359,13 +369,21 @@ fn EnchantmentComponent(props: &EnchantmentProps) -> Html {
     let x = index % 8;
     let y = index / 8;
 
+    let class = if props.enchant.is_curse() {
+        "red"
+    } else {
+        "yellow"
+    };
+
     html! {
         <div class="enchantment hover" style={format!("--x:{x};--y:{y}")}>
             <span />
             if let Some(level) = props.level {
                 <aside class="level">{level}</aside>
             }
-            <div><span>{props.enchant}</span></div>
+            <div><span {class}>
+                {props.enchant}
+            </span></div>
         </div>
     }
 }

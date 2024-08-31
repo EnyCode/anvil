@@ -129,18 +129,22 @@ impl Anvil {
         let mut highest_cost = u32::MIN;
         let mut highest_solution = Vec::new();
 
-        // TODO: for playground mode
-        // the slice of enchanted books may not be [1..]
-        // the items which aren't enchanted books should be permuted as well
-        // when inserting below, insert all the non-book items
+        let e_book_index = source_items
+            .iter()
+            .position(|item| item.item_type() == &ItemType::EnchantedBook)
+            .unwrap_or(0);
 
-        let e_books = &source_items[1..];
-        let e_book_count = e_books.len();
-        let e_book_permutations = e_books.into_iter().permutations(e_book_count);
+        let items = &source_items[..e_book_index];
+        let item_permutations = items.into_iter().permutations(items.len());
 
-        for permutation in e_book_permutations {
-            let mut items: Vec<Item> = permutation.into_iter().map(|i| i.clone()).collect();
-            items.insert(0, source_items[0].clone());
+        let e_books = &source_items[e_book_index..];
+        let e_book_permutations = e_books.into_iter().permutations(e_books.len());
+
+        for (permuted_items, permuted_books) in
+            item_permutations.cartesian_product(e_book_permutations)
+        {
+            let mut items: Vec<_> = permuted_items.into_iter().cloned().collect();
+            items.extend(permuted_books.into_iter().cloned());
 
             let items_original = items.clone();
 
@@ -185,9 +189,12 @@ impl Anvil {
 
         // when there is a single solution, only the lowest solution is assigned (to appease the borrow checker).
         // when this happens, we can just copy those values to the highest solution.
-        if highest_cost == 0 && lowest_cost > 0 {
+        if highest_cost == 0 && lowest_cost < u32::MAX {
             highest_cost = lowest_cost;
             highest_solution = lowest_solution.clone();
+        } else if highest_cost == 0 {
+            highest_cost = lowest_cost_flawed;
+            highest_solution = lowest_solution_flawed.clone();
         }
 
         // if there aren't any perfect solutions, go with a flawed one instead
